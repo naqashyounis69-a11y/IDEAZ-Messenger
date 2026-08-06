@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="IDEAZ Messenger real-time private chat"
+  >
+
+  <title>IDEAZ Messenger</title>
+
+  <link
+    rel="stylesheet"
+    href="/css/theme.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="/css/chat.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="/css/responsive.css?v=1"
+  >
+</head>
+
+<body>
+  <div
+    id="appLoader"
+    class="app-loader"
+  >
+    <div class="app-loader-logo">
+      IZ
+    </div>
+
+    <div class="app-loader-spinner"></div>
+
+    <p>
+      IDEAZ Messenger load ho raha hai...
+    </p>
+  </div>
+
+  <main
+    id="messengerApp"
+    class="messenger-app hidden"
+  >
+    <!-- Left navigation rail -->
+    <aside class="navigation-rail">
+      <div class="navigation-brand">
+        IZ
+      </div>
+
+      <nav
+        class="navigation-menu"
+        aria-label="Main navigation"
+      >
+        <button
+          class="navigation-button active"
+          type="button"
+          data-section="chats"
+          aria-label="Chats"
+          title="Chats"
+        >
+          <span class="navigation-icon">
+            💬
+          </span>
+
+          <span class="navigation-label">
+            Chats
+          </span>
+        </button>
+
+        <button
+          class="navigation-button"
+          type="button"
+          data-section="groups"
+          aria-label="Groups"
+          title="Groups"
+        >
+          <span class="navigation-icon">
+            👥
+          </span>
+
+          <span class="navigation-label">
+            Groups
+          </span>
+        </button>
+
+        <button
+          class="navigation-button"
+          type="button"
+          data-section="calls"
+          aria-label="Calls"
+          title="Calls"
+        >
+          <span class="navigation-icon">
+            📞
+          </span>
+
+          <span class="navigation-label">
+            Calls
+          </span>
+        </button>
+
+        <button
+          class="navigation-button"
+          type="button"
+          data-section="status"
+          aria-label="Status"
+          title="Status"
+        >
+          <span class="navigation-icon">
+            ◉
+          </span>
+
+          <span class="navigation-label">
+            Status
+          </span>
+        </button>
+      </nav>
+
+      <div class="navigation-bottom">
+        <button
+          id="themeToggle"
+          class="navigation-button"
+          type="button"
+          aria-label="Toggle theme"
+          title="Theme change karein"
+        >
+          <span
+            id="themeToggleIcon"
+            class="navigation-icon"
+          >
+            ☀
+          </span>
+        </button>
+
+        <button
+          id="openSettingsButton"
+          class="navigation-button"
+          type="button"
+          aria-label="Settings"
+          title="Settings"
+        >
+          <span class="navigation-icon">
+            ⚙
+          </span>
+        </button>
+
+        <button
+          id="profileMenuButton"
+          class="profile-mini-button"
+          type="button"
+          aria-label="Open profile menu"
+          title="Profile"
+        >
+          <img
+            id="navigationAvatar"
+            class="navigation-avatar"
+            src="/assets/default-avatar.svg"
+            alt="User avatar"
+          >
+
+          <span
+            id="navigationOnlineBadge"
+            class="navigation-online-badge"
+          ></span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Conversation list -->
+    <section class="conversation-sidebar">
+      <header class="conversation-sidebar-header">
+        <div>
+          <p class="sidebar-eyebrow">
+            IDEAZ Messenger
+          </p>
+
+          <h1 class="sidebar-title">
+            Chats
+          </h1>
+        </div>
+
+        <div class="sidebar-header-actions">
+          <button
+            id="newChatButton"
+            class="icon-button"
+            type="button"
+            aria-label="New chat"
+            title="New chat"
+          >
+            ＋
+          </button>
+
+          <button
+            id="sidebarMenuButton"
+            class="icon-button"
+            type="button"
+            aria-label="Chat menu"
+            title="Menu"
+          >
+            ⋮
+          </button>
+        </div>
+      </header>
+
+      <div class="conversation-search-wrapper">
+        <span class="conversation-search-icon">
+          🔍
+        </span>
+
+        <input
+          id="conversationSearchInput"
+          class="conversation-search-input"
+          type="search"
+          placeholder="Search chats or users"
+          autocomplete="off"
+        >
+
+        <button
+          id="clearConversationSearch"
+          class="search-clear-button hidden"
+          type="button"
+          aria-label="Clear search"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="conversation-filter-tabs">
+        <button
+          class="conversation-filter active"
+          type="button"
+          data-filter="all"
+        >
+          All
+        </button>
+
+        <button
+          class="conversation-filter"
+          type="button"
+          data-filter="unread"
+        >
+          Unread
+        </button>
+
+        <button
+          class="conversation-filter"
+          type="button"
+          data-filter="groups"
+        >
+          Groups
+        </button>
+      </div>
+
+      <div
+        id="conversationListState"
+        class="conversation-list-state hidden"
+      >
+        <div class="state-icon">
+          💬
+        </div>
+
+        <p id="conversationListStateText">
+          Chats load ho rahi hain...
+        </p>
+      </div>
+
+      <div
+        id="conversationList"
+        class="conversation-list"
+        role="list"
+      >
+        <!-- Conversations JavaScript se render hongi -->
+      </div>
+
+      <footer class="conversation-sidebar-footer">
+        <div class="connection-status">
+          <span
+            id="socketStatusDot"
+            class="connection-status-dot offline"
+          ></span>
+
+          <span id="socketStatusText">
+            Connecting...
+          </span>
+        </div>
+
+        <span
+          id="appVersion"
+          class="app-version"
+        >
+          v1.0.0
+        </span>
+      </footer>
+    </section>
+
+    <!-- Main chat workspace -->
+    <section class="chat-workspace">
+      <!-- Empty state -->
+      <section
+        id="chatEmptyState"
+        class="chat-empty-state"
+      >
+        <div class="chat-empty-logo">
+          IZ
+        </div>
+
+        <h2>
+          IDEAZ Messenger
+        </h2>
+
+        <p>
+          Left side se kisi user ko select karein
+          aur secure conversation start karein.
+        </p>
+
+        <div class="chat-empty-features">
+          <span>
+            🔒 Private
+          </span>
+
+          <span>
+            ⚡ Real-time
+          </span>
+
+          <span>
+            🖥 Electron Ready
+          </span>
+        </div>
+      </section>
+
+      <!-- Active chat -->
+      <section
+        id="activeChatPanel"
+        class="active-chat-panel hidden"
+      >
+        <header class="chat-header">
+          <div class="chat-header-user">
+            <button
+              id="mobileBackButton"
+              class="icon-button mobile-only"
+              type="button"
+              aria-label="Back to chats"
+            >
+              ←
+            </button>
+
+            <button
+              id="chatUserProfileButton"
+              class="chat-avatar-button"
+              type="button"
+              aria-label="Open user profile"
+            >
+              <img
+                id="activeChatAvatar"
+                class="chat-header-avatar"
+                src="/assets/default-avatar.svg"
+                alt="Contact avatar"
+              >
+
+              <span
+                id="activeChatOnlineBadge"
+                class="chat-header-online-badge hidden"
+              ></span>
+            </button>
+
+            <div class="chat-header-user-info">
+              <h2 id="activeChatName">
+                Contact Name
+              </h2>
+
+              <p id="activeChatStatus">
+                Offline
+              </p>
+            </div>
+          </div>
+
+          <div class="chat-header-actions">
+            <button
+              id="voiceCallButton"
+              class="icon-button"
+              type="button"
+              aria-label="Voice call"
+              title="Voice call"
+            >
+              📞
+            </button>
+
+            <button
+              id="videoCallButton"
+              class="icon-button"
+              type="button"
+              aria-label="Video call"
+              title="Video call"
+            >
+              🎥
+            </button>
+
+            <button
+              id="chatSearchButton"
+              class="icon-button"
+              type="button"
+              aria-label="Search messages"
+              title="Search messages"
+            >
+              🔍
+            </button>
+
+            <button
+              id="chatMenuButton"
+              class="icon-button"
+              type="button"
+              aria-label="Chat menu"
+              title="Menu"
+            >
+              ⋮
+            </button>
+          </div>
+        </header>
+
+        <div
+          id="messageSearchBar"
+          class="message-search-bar hidden"
+        >
+          <input
+            id="messageSearchInput"
+            type="search"
+            placeholder="Search in conversation"
+            autocomplete="off"
+          >
+
+          <span id="messageSearchCount">
+            0 results
+          </span>
+
+          <button
+            id="previousSearchResult"
+            class="icon-button"
+            type="button"
+            aria-label="Previous result"
+          >
+            ↑
+          </button>
+
+          <button
+            id="nextSearchResult"
+            class="icon-button"
+            type="button"
+            aria-label="Next result"
+          >
+            ↓
+          </button>
+
+          <button
+            id="closeMessageSearch"
+            class="icon-button"
+            type="button"
+            aria-label="Close search"
+          >
+            ×
+          </button>
+        </div>
+
+        <section
+          id="messagesViewport"
+          class="messages-viewport"
+        >
+          <div
+            id="loadOlderMessagesWrapper"
+            class="load-older-messages-wrapper hidden"
+          >
+            <button
+              id="loadOlderMessagesButton"
+              class="secondary-button"
+              type="button"
+            >
+              Older messages load karein
+            </button>
+          </div>
+
+          <div
+            id="messagesList"
+            class="messages-list"
+            aria-live="polite"
+          >
+            <!-- Messages JavaScript se render hongi -->
+          </div>
+
+          <button
+            id="scrollToBottomButton"
+            class="scroll-to-bottom-button hidden"
+            type="button"
+            aria-label="Scroll to latest message"
+          >
+            ↓
+
+            <span
+              id="newMessageCounter"
+              class="new-message-counter hidden"
+            >
+              0
+            </span>
+          </button>
+        </section>
+
+        <div
+          id="typingIndicator"
+          class="typing-indicator hidden"
+        >
+          <span class="typing-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+
+          <span id="typingIndicatorText">
+            Typing...
+          </span>
+        </div>
+
+        <div
+          id="replyPreview"
+          class="reply-preview hidden"
+        >
+          <div class="reply-preview-content">
+            <span class="reply-preview-label">
+              Replying to
+            </span>
+
+            <strong id="replyPreviewName">
+              User
+            </strong>
+
+            <p id="replyPreviewText">
+              Message
+            </p>
+          </div>
+
+          <button
+            id="cancelReplyButton"
+            class="icon-button"
+            type="button"
+            aria-label="Cancel reply"
+          >
+            ×
+          </button>
+        </div>
+
+        <div
+          id="attachmentPreview"
+          class="attachment-preview hidden"
+        >
+          <div
+            id="attachmentPreviewContent"
+            class="attachment-preview-content"
+          ></div>
+
+          <button
+            id="removeAttachmentButton"
+            class="icon-button"
+            type="button"
+            aria-label="Remove attachment"
+          >
+            ×
+          </button>
+        </div>
+
+        <footer class="message-composer">
+          <div class="composer-primary-row">
+            <button
+              id="emojiButton"
+              class="composer-icon-button"
+              type="button"
+              aria-label="Open emoji picker"
+              title="Emoji"
+            >
+              😊
+            </button>
+
+            <button
+              id="attachmentButton"
+              class="composer-icon-button"
+              type="button"
+              aria-label="Attach file"
+              title="Attach"
+            >
+              📎
+            </button>
+
+            <input
+              id="fileInput"
+              class="hidden"
+              type="file"
+              accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
+            >
+
+            <div class="message-input-wrapper">
+              <textarea
+                id="messageInput"
+                class="message-input"
+                rows="1"
+                maxlength="5000"
+                placeholder="Type a message"
+                aria-label="Message"
+              ></textarea>
+
+              <span
+                id="messageCharacterCount"
+                class="message-character-count hidden"
+              >
+                0 / 5000
+              </span>
+            </div>
+
+            <button
+              id="voiceRecordButton"
+              class="composer-icon-button"
+              type="button"
+              aria-label="Record voice message"
+              title="Voice message"
+            >
+              🎤
+            </button>
+
+            <button
+              id="sendMessageButton"
+              class="send-message-button"
+              type="button"
+              aria-label="Send message"
+              title="Send"
+              disabled
+            >
+              ➤
+            </button>
+          </div>
+
+          <div
+            id="voiceRecorderPanel"
+            class="voice-recorder-panel hidden"
+          >
+            <div class="voice-recorder-status">
+              <span class="recording-dot"></span>
+
+              <span id="voiceRecordingDuration">
+                00:00
+              </span>
+            </div>
+
+            <div class="voice-recorder-wave">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+
+            <button
+              id="cancelVoiceRecordingButton"
+              class="secondary-button danger"
+              type="button"
+            >
+              Cancel
+            </button>
+
+            <button
+              id="sendVoiceRecordingButton"
+              class="primary-button compact"
+              type="button"
+            >
+              Send Voice
+            </button>
+          </div>
+        </footer>
+      </section>
+    </section>
+
+    <!-- Right information panel -->
+    <aside
+      id="detailsPanel"
+      class="details-panel hidden"
+    >
+      <header class="details-panel-header">
+        <h2>
+          Contact Info
+        </h2>
+
+        <button
+          id="closeDetailsPanel"
+          class="icon-button"
+          type="button"
+          aria-label="Close details"
+        >
+          ×
+        </button>
+      </header>
+
+      <div class="details-profile">
+        <img
+          id="detailsAvatar"
+          class="details-avatar"
+          src="/assets/default-avatar.svg"
+          alt="Contact avatar"
+        >
+
+        <h3 id="detailsName">
+          Contact Name
+        </h3>
+
+        <p id="detailsUsername">
+          @username
+        </p>
+
+        <span
+          id="detailsStatus"
+          class="details-status"
+        >
+          Offline
+        </span>
+      </div>
+
+      <div class="details-action-grid">
+        <button
+          id="detailsVoiceCallButton"
+          class="details-action-button"
+          type="button"
+        >
+          <span>📞</span>
+          Call
+        </button>
+
+        <button
+          id="detailsVideoCallButton"
+          class="details-action-button"
+          type="button"
+        >
+          <span>🎥</span>
+          Video
+        </button>
+
+        <button
+          id="detailsSearchButton"
+          class="details-action-button"
+          type="button"
+        >
+          <span>🔍</span>
+          Search
+        </button>
+      </div>
+
+      <section class="details-section">
+        <h4>
+          About
+        </h4>
+
+        <p id="detailsAbout">
+          Hey! I am using IDEAZ Messenger
+        </p>
+      </section>
+
+      <section class="details-section">
+        <button
+          id="viewSharedMediaButton"
+          class="details-list-button"
+          type="button"
+        >
+          <span>
+            Shared Media
+          </span>
+
+          <span>
+            ›
+          </span>
+        </button>
+
+        <button
+          id="muteConversationButton"
+          class="details-list-button"
+          type="button"
+        >
+          <span>
+            Mute Notifications
+          </span>
+
+          <span
+            id="muteConversationState"
+          >
+            Off
+          </span>
+        </button>
+
+        <button
+          id="archiveConversationButton"
+          class="details-list-button"
+          type="button"
+        >
+          <span>
+            Archive Chat
+          </span>
+
+          <span>
+            ›
+          </span>
+        </button>
+      </section>
+
+      <section class="details-section danger-section">
+        <button
+          id="clearConversationButton"
+          class="details-list-button danger-text"
+          type="button"
+        >
+          Clear Conversation
+        </button>
+
+        <button
+          id="blockUserButton"
+          class="details-list-button danger-text"
+          type="button"
+        >
+          Block User
+        </button>
+      </section>
+    </aside>
+  </main>
+
+  <!-- New chat modal -->
+  <div
+    id="newChatModal"
+    class="modal-backdrop hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="newChatModalTitle"
+  >
+    <section class="modal-card">
+      <header class="modal-header">
+        <div>
+          <p class="modal-eyebrow">
+            Start conversation
+          </p>
+
+          <h2 id="newChatModalTitle">
+            New Chat
+          </h2>
+        </div>
+
+        <button
+          id="closeNewChatModal"
+          class="icon-button"
+          type="button"
+          aria-label="Close modal"
+        >
+          ×
+        </button>
+      </header>
+
+      <div class="modal-search-wrapper">
+        <span>
+          🔍
+        </span>
+
+        <input
+          id="newChatSearchInput"
+          type="search"
+          placeholder="Search username or name"
+          autocomplete="off"
+        >
+      </div>
+
+      <div
+        id="newChatUserList"
+        class="modal-user-list"
+      >
+        <!-- Search users JavaScript se render honge -->
+      </div>
+
+      <div
+        id="newChatEmptyState"
+        class="modal-empty-state"
+      >
+        Username ya naam search karein.
+      </div>
+    </section>
+  </div>
+
+  <!-- Profile menu -->
+  <div
+    id="profileMenu"
+    class="floating-menu hidden"
+  >
+    <button
+      id="viewProfileButton"
+      type="button"
+    >
+      My Profile
+    </button>
+
+    <button
+      id="profileSettingsButton"
+      type="button"
+    >
+      Settings
+    </button>
+
+    <div class="floating-menu-divider"></div>
+
+    <button
+      id="logoutButton"
+      class="danger-text"
+      type="button"
+    >
+      Logout
+    </button>
+  </div>
+
+  <!-- General context menu -->
+  <div
+    id="messageContextMenu"
+    class="floating-menu context-menu hidden"
+  >
+    <button
+      type="button"
+      data-action="reply"
+    >
+      Reply
+    </button>
+
+    <button
+      type="button"
+      data-action="copy"
+    >
+      Copy
+    </button>
+
+    <button
+      type="button"
+      data-action="forward"
+    >
+      Forward
+    </button>
+
+    <button
+      type="button"
+      data-action="react"
+    >
+      React
+    </button>
+
+    <button
+      type="button"
+      data-action="delete-me"
+    >
+      Delete for Me
+    </button>
+
+    <button
+      type="button"
+      data-action="delete-everyone"
+      class="danger-text"
+    >
+      Delete for Everyone
+    </button>
+  </div>
+
+  <!-- Toast container -->
+  <div
+    id="toastContainer"
+    class="toast-container"
+    aria-live="polite"
+  ></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/config.js"></script>
+  <script src="/js/storage.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/socket.js"></script>
+  <script src="/js/chat.socket.js"></script>
+  <script src="/js/typing.js"></script>
+  <script src="/js/notifications.js"></script>
+  <script src="/js/contact.js"></script>
+  <script src="/js/conversation.js"></script>
+  <script src="/js/messages.js"></script>
+  <script src="/js/uploads.js"></script>
+  <script src="/js/calls.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/chat.js"></script>
+</body>
+</html>
