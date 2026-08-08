@@ -3,7 +3,6 @@
   let recorder;
   let stream;
   let microphoneStream;
-  let audioContext;
   let chunks = [];
   let recordedBlob;
   let timer;
@@ -24,32 +23,15 @@
 
     try {
       microphoneStream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: true },
       });
+      const microphoneTrack = microphoneStream.getAudioTracks()[0];
+      if (!microphoneTrack) throw new Error("Microphone audio track nahi mili.");
+      microphoneTrack.enabled = true;
       stream = microphoneStream;
-
-      // Browser microphones can be extremely quiet. Record through a small
-      // Web Audio gain/compressor chain when the API is available.
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (AudioContextClass) {
-        audioContext = new AudioContextClass();
-        if (audioContext.state === "suspended") await audioContext.resume();
-        const source = audioContext.createMediaStreamSource(microphoneStream);
-        const gain = audioContext.createGain();
-        const compressor = audioContext.createDynamicsCompressor();
-        const destination = audioContext.createMediaStreamDestination();
-        gain.gain.value = 2.4;
-        compressor.threshold.value = -18;
-        compressor.knee.value = 18;
-        compressor.ratio.value = 4;
-        compressor.attack.value = 0.003;
-        compressor.release.value = 0.25;
-        source.connect(gain).connect(compressor).connect(destination);
-        stream = destination.stream;
-      }
       const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"]
         .find((type) => MediaRecorder.isTypeSupported(type));
-      recorder = new MediaRecorder(stream, mimeType ? { mimeType, audioBitsPerSecond: 64000 } : undefined);
+      recorder = new MediaRecorder(stream, mimeType ? { mimeType, audioBitsPerSecond: 128000 } : undefined);
       const recordingMimeType = recorder.mimeType || "audio/webm";
       chunks = [];
       recordedBlob = null;
@@ -61,15 +43,13 @@
         microphoneStream?.getTracks().forEach((track) => track.stop());
         stream = null;
         microphoneStream = null;
-        audioContext?.close().catch(() => {});
-        audioContext = null;
         if (sendAfterStop) {
           sendRecordedBlob();
         } else {
           setRecorderReady();
         }
       };
-      recorder.start(250);
+      recorder.start();
       startedAt = Date.now();
       context.elements.voiceRecorderPanel.classList.remove("hidden");
       context.elements.voiceRecordButton.classList.add("recording");
@@ -102,8 +82,13 @@
     if (recorder?.state === "recording") {
       sendAfterStop = true;
       context.elements.sendVoiceRecordingButton.disabled = true;
-      context.elements.sendVoiceRecordingButton.textContent = "Sending...";
-      stopVoiceRecording();
+      context.elements.sendVoiceRecordingButton.textContent = "Finishing...";
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < 1500) {
+        window.setTimeout(stopVoiceRecording, 1500 - elapsed);
+      } else {
+        stopVoiceRecording();
+      }
       return;
     }
     if (!recordedBlob?.size) return;
@@ -113,6 +98,11 @@
 
   async function sendRecordedBlob() {
     if (!recordedBlob?.size) return;
+
+    if (recordedBlob.size < 2500) {
+      setRecorderReady();
+      return notify("Voice record nahi hui. Microphone permission/input check karke 2 seconds bolain.", "error");
+    }
 
     const button = context.elements.sendVoiceRecordingButton;
     button.disabled = true;
@@ -160,8 +150,6 @@
     microphoneStream?.getTracks().forEach((track) => track.stop());
     stream = null;
     microphoneStream = null;
-    audioContext?.close().catch(() => {});
-    audioContext = null;
     recorder = null;
     chunks = [];
     recordedBlob = null;
