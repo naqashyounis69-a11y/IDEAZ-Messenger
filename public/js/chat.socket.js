@@ -23,6 +23,20 @@
       window.IDEAZ_CONTACTS?.renderMessages(context.state.messages);
     });
 
+    socket.on("group-message", (message) => {
+      if (!message?.id || context.state.selectedGroup?.id !== message.groupId) return;
+      context.state.groupMessages = context.state.groupMessages || [];
+      if (context.state.groupMessages.some((item) => item.id === message.id)) return;
+      context.state.groupMessages.push(message);
+      const box = context.elements.groupMessages;
+      if (!box) return;
+      const row = document.createElement("div");
+      row.className = `group-message ${message.senderId === context.state.currentUser.id ? "mine" : ""}`;
+      const sender = document.createElement("strong"); sender.textContent = message.sender?.fullName || "Member";
+      const text = document.createElement("span"); text.textContent = message.text || "Attachment";
+      row.append(sender, text); box.appendChild(row); box.scrollTop = box.scrollHeight;
+    });
+
     socket.on("typing-start", ({ userId }) => {
       if (context.state.selectedUser?.id !== userId) return;
       context.elements.typingIndicatorText.textContent = `${context.state.selectedUser.fullName || "Contact"} typing...`;

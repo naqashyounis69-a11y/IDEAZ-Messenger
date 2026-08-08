@@ -29,7 +29,7 @@
 
   <link
     rel="stylesheet"
-    href="/css/chat.css?v=13"
+    href="/css/chat.css?v=14"
   >
 
   <link
@@ -911,6 +911,24 @@
     </section>
   </div>
 
+  <!-- Groups center -->
+  <div id="groupsModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <section class="modal-card groups-card">
+      <header class="modal-header"><div><p class="modal-eyebrow">COMMUNITY</p><h2>Groups</h2></div><button id="closeGroupsModal" class="icon-button" type="button">×</button></header>
+      <form id="createGroupForm" class="group-create-form">
+        <input id="groupNameInput" minlength="2" maxlength="80" placeholder="Group name" required>
+        <div id="groupMemberChoices" class="group-member-choices"></div>
+        <button id="createGroupButton" class="primary-button" type="submit">Create Group</button>
+      </form>
+      <div id="groupsList" class="groups-list"></div>
+      <section id="groupChatPanel" class="group-chat-panel hidden">
+        <header><button id="backToGroups" class="icon-button" type="button">←</button><div><strong id="groupChatName"></strong><small id="groupChatMembers"></small></div></header>
+        <div id="groupMessages" class="group-messages"></div>
+        <form id="groupMessageForm" class="group-message-form"><input id="groupMessageInput" maxlength="5000" placeholder="Message group" autocomplete="off"><button class="primary-button" type="submit">➤</button></form>
+      </section>
+    </section>
+  </div>
+
   <!-- 24-hour Status center -->
   <div id="statusModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="statusModalTitle">
     <section class="modal-card status-center-card">
@@ -1103,9 +1121,9 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/config.js"></script>
   <script src="/js/storage.js"></script>
-  <script src="/js/api.js?v=9"></script>
+  <script src="/js/api.js?v=10"></script>
   <script src="/js/socket.js?v=6"></script>
-  <script src="/js/chat.socket.js?v=6"></script>
+  <script src="/js/chat.socket.js?v=7"></script>
   <script src="/js/typing.js"></script>
   <script src="/js/notifications.js"></script>
   <script src="/js/contact.js?v=7"></script>
@@ -1114,7 +1132,7 @@
   <script src="/js/uploads.js?v=8"></script>
   <script src="/js/calls.js?v=10"></script>
   <script src="/js/ui.js"></script>
-  <script src="/js/chat.js?v=16"></script>
+  <script src="/js/chat.js?v=17"></script>
   <script src="/js/pwa.js?v=2"></script>
 </body>
 </html>

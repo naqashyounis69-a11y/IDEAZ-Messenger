@@ -232,6 +232,20 @@
         ),
 
       statusModal: document.getElementById("statusModal"),
+      groupsModal: document.getElementById("groupsModal"),
+      closeGroupsModal: document.getElementById("closeGroupsModal"),
+      createGroupForm: document.getElementById("createGroupForm"),
+      groupNameInput: document.getElementById("groupNameInput"),
+      groupMemberChoices: document.getElementById("groupMemberChoices"),
+      createGroupButton: document.getElementById("createGroupButton"),
+      groupsList: document.getElementById("groupsList"),
+      groupChatPanel: document.getElementById("groupChatPanel"),
+      backToGroups: document.getElementById("backToGroups"),
+      groupChatName: document.getElementById("groupChatName"),
+      groupChatMembers: document.getElementById("groupChatMembers"),
+      groupMessages: document.getElementById("groupMessages"),
+      groupMessageForm: document.getElementById("groupMessageForm"),
+      groupMessageInput: document.getElementById("groupMessageInput"),
       closeStatusModal: document.getElementById("closeStatusModal"),
       statusForm: document.getElementById("statusForm"),
       statusTextInput: document.getElementById("statusTextInput"),
@@ -663,6 +677,7 @@
               button.dataset.section
             );
             if (button.dataset.section === "status") openStatusCenter(elements, state);
+            if (button.dataset.section === "groups") openGroupsCenter(elements, state);
           }
         );
       }
@@ -677,6 +692,11 @@
       elements.statusImageName.textContent = file ? file.name : "";
     });
     elements.statusForm?.addEventListener("submit", (event) => { event.preventDefault(); postStatus(elements, state); });
+    elements.closeGroupsModal?.addEventListener("click", () => hideElement(elements.groupsModal));
+    elements.groupsModal?.addEventListener("click", event => { if(event.target===elements.groupsModal) hideElement(elements.groupsModal); });
+    elements.backToGroups?.addEventListener("click", () => elements.groupChatPanel.classList.add("hidden"));
+    elements.createGroupForm?.addEventListener("submit", event => { event.preventDefault(); createGroup(elements,state); });
+    elements.groupMessageForm?.addEventListener("submit", event => { event.preventDefault(); sendGroupMessage(elements,state); });
 
     if (
       elements.profileMenuButton
@@ -1670,7 +1690,7 @@
       }
     );
 
-    if (section !== "chats" && section !== "status") {
+    if (section !== "chats" && section !== "status" && section !== "groups") {
       showToast(
         elements,
         `${capitalize(section)} module next phase mein active hoga.`,
@@ -1678,6 +1698,22 @@
       );
     }
   }
+
+  async function openGroupsCenter(elements,state){
+    showElement(elements.groupsModal); elements.groupChatPanel.classList.add("hidden");
+    try{
+      const [groupsResponse,usersResponse]=await Promise.all([window.IDEAZ_API.groups(),window.IDEAZ_API.users()]);
+      state.groups=groupsResponse.data.groups||[]; state.groupUsers=usersResponse.data.users||[];
+      elements.groupMemberChoices.innerHTML="";
+      state.groupUsers.forEach(user=>{const label=document.createElement("label"); const input=document.createElement("input"); input.type="checkbox";input.value=user.id; const span=document.createElement("span");span.textContent=user.fullName;label.append(input,span);elements.groupMemberChoices.appendChild(label);});
+      renderGroups(elements,state);
+    }catch(error){showToast(elements,error.message||"Groups load nahi ho sake.","error");}
+  }
+  function renderGroups(elements,state){elements.groupsList.innerHTML="";(state.groups||[]).forEach(group=>{const button=document.createElement("button");button.type="button";button.className="group-list-item";const icon=document.createElement("span");icon.textContent="👥";const info=document.createElement("span");const name=document.createElement("strong");name.textContent=group.name;const meta=document.createElement("small");meta.textContent=`${group.members.length} members`;info.append(name,meta);button.append(icon,info);button.onclick=()=>openGroupChat(elements,state,group);elements.groupsList.appendChild(button);});if(!state.groups?.length)elements.groupsList.innerHTML='<div class="modal-empty-state">Abhi koi group nahi. Upar se banayein.</div>';}
+  async function createGroup(elements,state){const ids=[...elements.groupMemberChoices.querySelectorAll('input:checked')].map(x=>x.value);const button=elements.createGroupButton;button.disabled=true;try{await window.IDEAZ_API.createGroup({name:elements.groupNameInput.value.trim(),memberIds:ids});elements.createGroupForm.reset();showToast(elements,"Group create ho gaya.","success");await openGroupsCenter(elements,state);}catch(error){showToast(elements,error.message,"error");}finally{button.disabled=false;}}
+  async function openGroupChat(elements,state,group){state.selectedGroup=group;elements.groupChatName.textContent=group.name;elements.groupChatMembers.textContent=`${group.members.length} members`;elements.groupChatPanel.classList.remove("hidden");const response=await window.IDEAZ_API.groupMessages(group.id);state.groupMessages=response.data.messages||[];renderGroupMessages(elements,state);}
+  function renderGroupMessages(elements,state){elements.groupMessages.innerHTML="";(state.groupMessages||[]).forEach(message=>{const row=document.createElement("div");row.className=`group-message ${message.senderId===state.currentUser.id?"mine":""}`;const sender=document.createElement("strong");sender.textContent=message.sender?.fullName||"Member";const text=document.createElement("span");text.textContent=message.text||"Attachment";row.append(sender,text);elements.groupMessages.appendChild(row);});elements.groupMessages.scrollTop=elements.groupMessages.scrollHeight;}
+  async function sendGroupMessage(elements,state){const text=elements.groupMessageInput.value.trim();if(!text||!state.selectedGroup)return;try{const response=await window.IDEAZ_API.sendGroupMessage(state.selectedGroup.id,{text});elements.groupMessageInput.value="";const message=response.data.message;if(!state.groupMessages.some(x=>x.id===message.id)){state.groupMessages.push(message);renderGroupMessages(elements,state);}}catch(error){showToast(elements,error.message,"error");}}
 
   async function openStatusCenter(elements, state) {
     showElement(elements.statusModal);

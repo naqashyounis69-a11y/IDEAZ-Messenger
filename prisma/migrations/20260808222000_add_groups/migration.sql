@@ -1,0 +1,11 @@
+CREATE TABLE "Group" ("id" TEXT NOT NULL,"name" TEXT NOT NULL,"avatar" TEXT,"creatorId" TEXT NOT NULL,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL,CONSTRAINT "Group_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "GroupMember" ("id" TEXT NOT NULL,"groupId" TEXT NOT NULL,"userId" TEXT NOT NULL,"isAdmin" BOOLEAN NOT NULL DEFAULT false,"joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "GroupMember_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "GroupMessage" ("id" TEXT NOT NULL,"groupId" TEXT NOT NULL,"senderId" TEXT NOT NULL,"text" TEXT,"file" TEXT,"fileType" TEXT,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "GroupMessage_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "GroupMember_groupId_userId_key" ON "GroupMember"("groupId","userId");
+CREATE INDEX "GroupMember_userId_idx" ON "GroupMember"("userId");
+CREATE INDEX "GroupMessage_groupId_createdAt_idx" ON "GroupMessage"("groupId","createdAt");
+ALTER TABLE "Group" ADD CONSTRAINT "Group_creatorId_fkey" FOREIGN KEY ("creatorId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "GroupMember" ADD CONSTRAINT "GroupMember_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "GroupMember" ADD CONSTRAINT "GroupMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "GroupMessage" ADD CONSTRAINT "GroupMessage_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "GroupMessage" ADD CONSTRAINT "GroupMessage_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

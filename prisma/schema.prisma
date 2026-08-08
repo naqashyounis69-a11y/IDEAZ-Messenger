@@ -25,9 +25,49 @@ model User {
   receivedMessages Message[] @relation("ReceiverMessages")
   statuses         Status[]
   statusViews      StatusView[]
+  createdGroups    Group[]        @relation("GroupCreator")
+  groupMemberships GroupMember[]
+  groupMessages    GroupMessage[]
 
   @@index([username])
   @@index([online])
+}
+
+model Group {
+  id        String         @id @default(uuid())
+  name      String
+  avatar    String?
+  creatorId String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  creator   User           @relation("GroupCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  members   GroupMember[]
+  messages  GroupMessage[]
+}
+
+model GroupMember {
+  id       String   @id @default(uuid())
+  groupId  String
+  userId   String
+  isAdmin  Boolean  @default(false)
+  joinedAt DateTime @default(now())
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([groupId, userId])
+  @@index([userId])
+}
+
+model GroupMessage {
+  id        String   @id @default(uuid())
+  groupId   String
+  senderId  String
+  text      String?
+  file      String?
+  fileType  String?
+  createdAt DateTime @default(now())
+  group  Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  sender User  @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  @@index([groupId, createdAt])
 }
 
 model Status {

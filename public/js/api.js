@@ -41,6 +41,10 @@
     postStatus: (data) => request("/statuses", { method: "POST", body: JSON.stringify(data) }),
     viewStatus: (id) => request(`/statuses/${id}/view`, { method: "PATCH" }),
     deleteStatus: (id) => request(`/statuses/${id}`, { method: "DELETE" }),
+    groups: () => request("/groups"),
+    createGroup: (data) => request("/groups", { method: "POST", body: JSON.stringify(data) }),
+    groupMessages: (id) => request(`/groups/${id}/messages`),
+    sendGroupMessage: (id, data) => request(`/groups/${id}/messages`, { method: "POST", body: JSON.stringify(data) }),
     upload: (file) => {
       const form = new FormData();
       form.append("file", file);
