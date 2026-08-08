@@ -2,6 +2,8 @@
   let context;
   let recorder;
   let stream;
+  let microphoneStream;
+  let audioContext;
   let chunks = [];
   let recordedBlob;
   let timer;
@@ -13,7 +15,7 @@
   }
 
   async function startVoiceRecording() {
-    if (!context?.state?.selectedConversation) {
+    if (!context?.state?.selectedConversation && !context?.state?.selectedUser) {
       return notify("Pehle koi chat select karein.", "warning");
     }
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
@@ -21,9 +23,30 @@
     }
 
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
+      microphoneStream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       });
+      stream = microphoneStream;
+
+      // Browser microphones can be extremely quiet. Record through a small
+      // Web Audio gain/compressor chain when the API is available.
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        audioContext = new AudioContextClass();
+        if (audioContext.state === "suspended") await audioContext.resume();
+        const source = audioContext.createMediaStreamSource(microphoneStream);
+        const gain = audioContext.createGain();
+        const compressor = audioContext.createDynamicsCompressor();
+        const destination = audioContext.createMediaStreamDestination();
+        gain.gain.value = 2.4;
+        compressor.threshold.value = -18;
+        compressor.knee.value = 18;
+        compressor.ratio.value = 4;
+        compressor.attack.value = 0.003;
+        compressor.release.value = 0.25;
+        source.connect(gain).connect(compressor).connect(destination);
+        stream = destination.stream;
+      }
       const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"]
         .find((type) => MediaRecorder.isTypeSupported(type));
       recorder = new MediaRecorder(stream, mimeType ? { mimeType, audioBitsPerSecond: 64000 } : undefined);
@@ -35,7 +58,11 @@
       recorder.onstop = () => {
         recordedBlob = new Blob(chunks, { type: recordingMimeType });
         stream?.getTracks().forEach((track) => track.stop());
+        microphoneStream?.getTracks().forEach((track) => track.stop());
         stream = null;
+        microphoneStream = null;
+        audioContext?.close().catch(() => {});
+        audioContext = null;
         if (sendAfterStop) {
           sendRecordedBlob();
         } else {
@@ -130,7 +157,11 @@
     window.clearInterval(timer);
     timer = null;
     stream?.getTracks().forEach((track) => track.stop());
+    microphoneStream?.getTracks().forEach((track) => track.stop());
     stream = null;
+    microphoneStream = null;
+    audioContext?.close().catch(() => {});
+    audioContext = null;
     recorder = null;
     chunks = [];
     recordedBlob = null;
