@@ -187,6 +187,7 @@ async function updateProfile(req, res, next) {
       fullName: req.body.fullName,
       about: req.body.about,
       avatar: req.body.avatar,
+      allowMessagesFromAnyone: req.body.allowMessagesFromAnyone,
     });
     return sendSuccess(res, 200, "Profile update ho gayi.", { user });
   } catch (error) {

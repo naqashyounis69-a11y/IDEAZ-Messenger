@@ -927,6 +927,10 @@
         <label>Username<input id="profileUsernameInput" type="text" readonly></label>
         <label>Full Name<input id="profileFullNameInput" type="text" minlength="2" maxlength="60" required></label>
         <label>About<textarea id="profileAboutInput" rows="3" maxlength="160" placeholder="Tell something about yourself"></textarea></label>
+        <label class="profile-privacy-toggle">
+          <span><strong>Can anyone send me messages?</strong><small>Off karne par koi user naya message nahi bhej sakega.</small></span>
+          <input id="allowMessagesToggle" type="checkbox" checked>
+        </label>
         <div class="profile-form-actions">
           <button id="cancelProfileButton" type="button" class="secondary-button">Cancel</button>
           <button id="saveProfileButton" type="submit" class="primary-button">Save Profile</button>
@@ -1057,7 +1061,7 @@
   <script src="/js/uploads.js?v=8"></script>
   <script src="/js/calls.js?v=9"></script>
   <script src="/js/ui.js"></script>
-  <script src="/js/chat.js?v=13"></script>
+  <script src="/js/chat.js?v=14"></script>
   <script src="/js/pwa.js?v=2"></script>
 </body>
 </html>

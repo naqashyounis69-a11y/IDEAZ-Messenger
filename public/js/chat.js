@@ -210,6 +210,7 @@
       profileUsernameInput: document.getElementById("profileUsernameInput"),
       profileFullNameInput: document.getElementById("profileFullNameInput"),
       profileAboutInput: document.getElementById("profileAboutInput"),
+      allowMessagesToggle: document.getElementById("allowMessagesToggle"),
       saveProfileButton: document.getElementById("saveProfileButton"),
 
       logoutButton:
@@ -1483,6 +1484,7 @@
     elements.profileUsernameInput.value = user.username || "";
     elements.profileFullNameInput.value = user.fullName || "";
     elements.profileAboutInput.value = user.about || "";
+    elements.allowMessagesToggle.checked = user.allowMessagesFromAnyone !== false;
     elements.profileAvatarPreview.src = user.avatar || "/assets/default-avatar.svg";
     elements.profileAvatarInput.value = "";
     showElement(elements.profileModal);
@@ -1503,6 +1505,7 @@
         fullName: elements.profileFullNameInput.value.trim(),
         about: elements.profileAboutInput.value.trim(),
         avatar,
+        allowMessagesFromAnyone: elements.allowMessagesToggle.checked,
       });
       state.currentUser = response.data.user;
       renderCurrentUser(elements, state.currentUser);

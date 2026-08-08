@@ -149,7 +149,14 @@ async function sendMessage({
   }
 
   await ensureUser(senderId);
-  await ensureUser(receiverId);
+  const receiver = await ensureUser(receiverId);
+  const receiverPrivacy = await prisma.user.findUnique({
+    where: { id: receiverId },
+    select: { allowMessagesFromAnyone: true },
+  });
+  if (receiverPrivacy && !receiverPrivacy.allowMessagesFromAnyone) {
+    throw createError(403, `${receiver.fullName || receiver.username} abhi messages accept nahi kar raha.`);
+  }
 
   const message = await prisma.message.create({
     data: {

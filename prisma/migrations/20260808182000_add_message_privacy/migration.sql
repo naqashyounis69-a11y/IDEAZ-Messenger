@@ -1,0 +1,2 @@
+ALTER TABLE "User"
+ADD COLUMN "allowMessagesFromAnyone" BOOLEAN NOT NULL DEFAULT true;
