@@ -4,6 +4,7 @@
   let peer;
   let localStream;
   let remoteStream;
+  let screenStream;
   let activeUser;
   let activeType = "voice";
   let pendingOffer;
@@ -38,6 +39,7 @@
     byId("toggleMuteButton")?.addEventListener("click", toggleMute);
     byId("toggleCameraButton")?.addEventListener("click", toggleCamera);
     byId("enableCallAudioButton")?.addEventListener("click", enableCallAudio);
+    byId("shareScreenButton")?.addEventListener("click", toggleScreenShare);
     byId("callOverlay")?.addEventListener("click", playRemoteMedia);
     rtcConfigPromise = loadRtcConfig();
   }
@@ -70,6 +72,7 @@
       await prepareMedia(type);
       createPeer();
       localStream.getTracks().forEach((track) => peer.addTrack(track, localStream));
+      ensureVideoTransceiver();
       const offer = await peer.createOffer();
       await peer.setLocalDescription(offer);
       socket.emit("call:offer", { targetUserId: activeUser.id, offer, type, caller: context.state.currentUser });
@@ -98,6 +101,7 @@
       await prepareMedia(activeType);
       createPeer();
       localStream.getTracks().forEach((track) => peer.addTrack(track, localStream));
+      ensureVideoTransceiver();
       await peer.setRemoteDescription(pendingOffer.offer);
       await flushPendingCandidates();
       const answer = await peer.createAnswer();
@@ -204,6 +208,55 @@
     }
   }
 
+  function ensureVideoTransceiver() {
+    if (activeType !== "video") return;
+    const hasVideoSender = peer.getSenders().some((sender) => sender.track?.kind === "video");
+    if (!hasVideoSender) peer.addTransceiver("video", { direction: "sendrecv" });
+  }
+
+  async function toggleScreenShare(event) {
+    event?.stopPropagation();
+    if (screenStream) return stopScreenShare();
+    if (!navigator.mediaDevices?.getDisplayMedia) {
+      return notify("Is phone/browser mein screen sharing support nahi hai.", "warning");
+    }
+
+    try {
+      screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: { ideal: 15, max: 24 } },
+        audio: false,
+      });
+      const screenTrack = screenStream.getVideoTracks()[0];
+      const sender = peer?.getSenders().find((item) => item.track?.kind === "video") ||
+        peer?.getTransceivers().find((item) => item.receiver?.track?.kind === "video")?.sender;
+      if (!sender || !screenTrack) throw new Error("Video sender unavailable");
+      await sender.replaceTrack(screenTrack);
+      byId("localVideo").srcObject = screenStream;
+      byId("localVideo").classList.remove("hidden");
+      byId("shareScreenButton")?.classList.add("off");
+      byId("callStatusText").textContent = "Screen share ho rahi hai";
+      screenTrack.addEventListener("ended", stopScreenShare, { once: true });
+    } catch (error) {
+      screenStream?.getTracks().forEach((track) => track.stop());
+      screenStream = null;
+      if (error.name !== "NotAllowedError") notify("Screen share start nahi ho saki.", "warning");
+    }
+  }
+
+  async function stopScreenShare() {
+    const currentScreen = screenStream;
+    screenStream = null;
+    const cameraTrack = localStream?.getVideoTracks()[0] || null;
+    const sender = peer?.getSenders().find((item) => item.track?.kind === "video") ||
+      peer?.getTransceivers().find((item) => item.receiver?.track?.kind === "video")?.sender;
+    try { await sender?.replaceTrack(cameraTrack); } catch (error) { console.warn(error); }
+    currentScreen?.getTracks().forEach((track) => track.stop());
+    byId("localVideo").srcObject = localStream;
+    byId("localVideo").classList.toggle("hidden", !cameraTrack);
+    byId("shareScreenButton")?.classList.remove("off");
+    if (peer?.connectionState === "connected") byId("callStatusText").textContent = "Connected";
+  }
+
   async function prepareMedia(type) {
     const audioStream = await navigator.mediaDevices.getUserMedia({
       audio: {
@@ -250,6 +303,7 @@
     byId("activeCallActions").classList.toggle("hidden", incoming);
     byId("enableCallAudioButton")?.classList.add("hidden");
     byId("toggleCameraButton").classList.toggle("hidden", activeType !== "video");
+    byId("shareScreenButton")?.classList.toggle("hidden", activeType !== "video");
   }
 
   function showActiveControls() {
@@ -269,9 +323,10 @@
 
   function closeCall(message) {
     stopRinging();
+    screenStream?.getTracks().forEach((track) => track.stop());
     localStream?.getTracks().forEach((track) => track.stop());
     peer?.close();
-    peer = null; localStream = null; remoteStream = null; pendingOffer = null; pendingCandidates = [];
+    peer = null; localStream = null; remoteStream = null; screenStream = null; pendingOffer = null; pendingCandidates = [];
     ["localVideo", "remoteVideo"].forEach((id) => { const video = byId(id); if (video) video.srcObject = null; });
     const remoteAudio = byId("remoteAudio");
     if (remoteAudio) remoteAudio.srcObject = null;
