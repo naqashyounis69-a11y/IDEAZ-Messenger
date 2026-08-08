@@ -454,7 +454,8 @@
   }
 
   .emoji-picker{left:6px;bottom:calc(100% + 5px);width:calc(100vw - 12px);max-height:46dvh;border-radius:18px}
-  .emoji-grid{grid-template-columns:repeat(7,1fr);max-height:calc(46dvh - 58px);padding:7px}
+  .emoji-grid{grid-template-columns:repeat(7,1fr);max-height:calc(46dvh - 105px);padding:7px}
+  .emoji-category{height:42px;font-size:22px}
   .emoji-option{height:40px;font-size:24px}
 
   .composer-icon-button {

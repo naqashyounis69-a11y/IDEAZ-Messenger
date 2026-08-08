@@ -2266,8 +2266,32 @@
       picker.setAttribute("role", "dialog");
       picker.setAttribute("aria-label", "Emoji picker");
       picker.innerHTML = `<div class="emoji-picker-header"><strong>Emojis</strong><button type="button" aria-label="Close emoji picker">×</button></div><div class="emoji-grid">${emojis.map((emoji) => `<button type="button" class="emoji-option" data-emoji="${emoji}" aria-label="${emoji}">${emoji}</button>`).join("")}</div>`;
+      const categoryRanges = [
+        { id: "faces", icon: "😀", label: "Faces", start: 0, end: 40 },
+        { id: "hands", icon: "👍", label: "Hands", start: 40, end: 60 },
+        { id: "hearts", icon: "❤️", label: "Hearts", start: 60, end: 80 },
+        { id: "fun", icon: "🎉", label: "Fun", start: 80, end: 100 },
+        { id: "things", icon: "🍕", label: "Food & things", start: 100, end: 120 }
+      ];
+      const categoryBar = document.createElement("div");
+      categoryBar.className = "emoji-categories";
+      categoryBar.setAttribute("role", "tablist");
+      categoryBar.innerHTML = categoryRanges.map((category, index) => `<button type="button" class="emoji-category${index === 0 ? " active" : ""}" data-category="${category.id}" role="tab" aria-label="${category.label}">${category.icon}</button>`).join("");
+      picker.querySelector(".emoji-picker-header").after(categoryBar);
+      const emojiOptions = Array.from(picker.querySelectorAll(".emoji-option"));
+      const showCategory = (id) => {
+        const category = categoryRanges.find((item) => item.id === id) || categoryRanges[0];
+        emojiOptions.forEach((option, index) => option.classList.toggle("hidden", index < category.start || index >= category.end));
+        categoryBar.querySelectorAll(".emoji-category").forEach((tab) => tab.classList.toggle("active", tab.dataset.category === category.id));
+      };
+      showCategory("faces");
       elements.messageInput.closest(".message-composer").appendChild(picker);
       picker.addEventListener("click", function (event) {
+        const categoryButton = event.target.closest(".emoji-category");
+        if (categoryButton) {
+          showCategory(categoryButton.dataset.category);
+          return;
+        }
         const option = event.target.closest(".emoji-option");
         if (option) {
           insertEmoji(elements, option.dataset.emoji);
