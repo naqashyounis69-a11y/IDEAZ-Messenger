@@ -7,6 +7,10 @@ const {
     registerMessageSocket,
 } = require("./message.socket");
 
+const {
+    registerCallSocket,
+} = require("./call.socket");
+
 function initializeSocket(io) {
 
     io.on("connection", (socket) => {
@@ -46,6 +50,11 @@ function initializeSocket(io) {
         */
 
         registerMessageSocket(
+            io,
+            socket
+        );
+
+        registerCallSocket(
             io,
             socket
         );

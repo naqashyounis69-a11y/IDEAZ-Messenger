@@ -1,0 +1,1 @@
+window.IDEAZ_TYPING={};

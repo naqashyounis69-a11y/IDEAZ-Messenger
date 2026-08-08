@@ -95,10 +95,10 @@ function validatePassword(password) {
     };
   }
 
-  if (String(password).length < 6) {
+  if (String(password).length < 4) {
     throw {
       statusCode: 400,
-      message: "Password kam az kam 6 characters ka hona chahiye.",
+      message: "Password kam az kam 4 characters ka hona chahiye.",
     };
   }
 

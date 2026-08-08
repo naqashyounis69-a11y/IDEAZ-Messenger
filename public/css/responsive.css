@@ -192,7 +192,9 @@
   .active-chat-panel {
     width: 100%;
     height: 100dvh;
-    grid-template-rows: auto auto minmax(0, 1fr) auto auto auto auto;
+    max-height: 100dvh;
+    overflow: hidden;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto auto max-content;
   }
 
   .chat-header {

@@ -17,12 +17,12 @@
 
   <link
     rel="stylesheet"
-    href="/css/theme.css"
+    href="/css/theme.css?v=8"
   >
 
   <link
     rel="stylesheet"
-    href="/css/chat.css"
+    href="/css/chat.css?v=8"
   >
 
   <link
@@ -973,6 +973,26 @@
   </div>
 
   <!-- Toast container -->
+  <section id="callOverlay" class="call-overlay hidden" aria-live="assertive">
+    <div class="call-card">
+      <video id="remoteVideo" class="remote-video hidden" autoplay playsinline></video>
+      <video id="localVideo" class="local-video hidden" autoplay playsinline muted></video>
+      <audio id="remoteAudio" autoplay></audio>
+      <div id="callAvatar" class="call-avatar">IZ</div>
+      <h2 id="callContactName">Contact</h2>
+      <p id="callStatusText">Calling...</p>
+      <div id="incomingCallActions" class="call-actions hidden">
+        <button id="rejectCallButton" class="call-control reject" type="button" aria-label="Reject call">✕</button>
+        <button id="acceptCallButton" class="call-control accept" type="button" aria-label="Accept call">📞</button>
+      </div>
+      <div id="activeCallActions" class="call-actions hidden">
+        <button id="toggleMuteButton" class="call-control" type="button" aria-label="Mute microphone">🎙️</button>
+        <button id="toggleCameraButton" class="call-control" type="button" aria-label="Toggle camera">📹</button>
+        <button id="endCallButton" class="call-control reject" type="button" aria-label="End call">📞</button>
+      </div>
+    </div>
+  </section>
+
   <div
     id="toastContainer"
     class="toast-container"
@@ -982,17 +1002,17 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/config.js"></script>
   <script src="/js/storage.js"></script>
-  <script src="/js/api.js"></script>
-  <script src="/js/socket.js"></script>
-  <script src="/js/chat.socket.js"></script>
+  <script src="/js/api.js?v=7"></script>
+  <script src="/js/socket.js?v=6"></script>
+  <script src="/js/chat.socket.js?v=6"></script>
   <script src="/js/typing.js"></script>
   <script src="/js/notifications.js"></script>
-  <script src="/js/contact.js"></script>
-  <script src="/js/conversation.js"></script>
+  <script src="/js/contact.js?v=6"></script>
+  <script src="/js/conversation.js?v=6"></script>
   <script src="/js/messages.js"></script>
-  <script src="/js/uploads.js"></script>
-  <script src="/js/calls.js"></script>
+  <script src="/js/uploads.js?v=6"></script>
+  <script src="/js/calls.js?v=5"></script>
   <script src="/js/ui.js"></script>
-  <script src="/js/chat.js"></script>
+  <script src="/js/chat.js?v=8"></script>
 </body>
 </html>

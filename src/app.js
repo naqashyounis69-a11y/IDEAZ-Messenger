@@ -9,6 +9,7 @@ const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
 const messageRoutes = require("./routes/message.routes");
 const conversationRoutes = require("./routes/conversation.routes");
+const uploadRoutes = require("./routes/upload.routes");
 
 const {
   notFound,
@@ -103,6 +104,13 @@ app.use(
   express.static(publicPath, {
     index: false,
     fallthrough: true,
+    etag: true,
+    maxAge: 0,
+    setHeaders: function disableFrontendCache(res) {
+      if (process.env.NODE_ENV !== "production") {
+        res.setHeader("Cache-Control", "no-store");
+      }
+    },
   })
 );
 
@@ -217,6 +225,11 @@ app.use(
 app.use(
   "/api/conversations",
   conversationRoutes
+);
+
+app.use(
+  "/api/uploads",
+  uploadRoutes
 );
 
 /*

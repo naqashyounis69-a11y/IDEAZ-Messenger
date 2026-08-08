@@ -479,6 +479,11 @@
           "voiceRecorderPanel"
         ),
 
+      voiceRecordingDuration:
+        document.getElementById(
+          "voiceRecordingDuration"
+        ),
+
       cancelVoiceRecordingButton:
         document.getElementById(
           "cancelVoiceRecordingButton"
@@ -902,10 +907,7 @@
       elements.voiceCallButton.addEventListener(
         "click",
         function () {
-          showCallPlaceholder(
-            elements,
-            "Voice call"
-          );
+          window.IDEAZ_CALLS?.startCall("voice");
         }
       );
     }
@@ -916,10 +918,7 @@
       elements.videoCallButton.addEventListener(
         "click",
         function () {
-          showCallPlaceholder(
-            elements,
-            "Video call"
-          );
+          window.IDEAZ_CALLS?.startCall("video");
         }
       );
     }
@@ -930,10 +929,7 @@
       elements.detailsVoiceCallButton.addEventListener(
         "click",
         function () {
-          showCallPlaceholder(
-            elements,
-            "Voice call"
-          );
+          window.IDEAZ_CALLS?.startCall("voice");
         }
       );
     }
@@ -944,10 +940,7 @@
       elements.detailsVideoCallButton.addEventListener(
         "click",
         function () {
-          showCallPlaceholder(
-            elements,
-            "Video call"
-          );
+          window.IDEAZ_CALLS?.startCall("video");
         }
       );
     }
@@ -1154,16 +1147,7 @@
       elements.voiceRecordButton.addEventListener(
         "click",
         function () {
-          toggleElement(
-            elements.voiceRecorderPanel,
-            true
-          );
-
-          showToast(
-            elements,
-            "Voice recording interface ready hai. Actual recording next phase mein add hogi.",
-            "warning"
-          );
+          window.IDEAZ_UPLOADS?.startVoiceRecording();
         }
       );
     }
@@ -1174,9 +1158,7 @@
       elements.cancelVoiceRecordingButton.addEventListener(
         "click",
         function () {
-          hideElement(
-            elements.voiceRecorderPanel
-          );
+          window.IDEAZ_UPLOADS?.cancelVoiceRecording();
         }
       );
     }
@@ -1187,15 +1169,7 @@
       elements.sendVoiceRecordingButton.addEventListener(
         "click",
         function () {
-          hideElement(
-            elements.voiceRecorderPanel
-          );
-
-          showToast(
-            elements,
-            "Voice recording backend next phase mein connect hoga.",
-            "warning"
-          );
+          window.IDEAZ_UPLOADS?.sendVoiceRecording();
         }
       );
     }
@@ -1392,6 +1366,36 @@
         "Socket module pending"
       );
     }
+
+    if (
+      window.IDEAZ_CALLS &&
+      typeof window.IDEAZ_CALLS.initialize === "function"
+    ) {
+      window.IDEAZ_CALLS.initialize({
+        elements,
+        state,
+      });
+    }
+
+    if (
+      window.IDEAZ_CHAT_SOCKET &&
+      typeof window.IDEAZ_CHAT_SOCKET.initialize === "function"
+    ) {
+      window.IDEAZ_CHAT_SOCKET.initialize({
+        elements,
+        state,
+      });
+    }
+
+    if (
+      window.IDEAZ_UPLOADS &&
+      typeof window.IDEAZ_UPLOADS.initialize === "function"
+    ) {
+      window.IDEAZ_UPLOADS.initialize({
+        elements,
+        state,
+      });
+    }
   }
 
   function renderCurrentUser(
@@ -1407,6 +1411,11 @@
     ) {
       elements.navigationAvatar.src =
         avatarUrl;
+
+      elements.navigationAvatar.onerror =
+        function hideMissingAvatar() {
+          this.style.visibility = "hidden";
+        };
 
       elements.navigationAvatar.alt =
         user.fullName ||
@@ -1800,6 +1809,11 @@
     if (elements.detailsAvatar) {
       elements.detailsAvatar.src =
         avatarUrl;
+
+      elements.detailsAvatar.onerror =
+        function hideMissingAvatar() {
+          this.style.visibility = "hidden";
+        };
     }
 
     if (elements.detailsName) {
@@ -2050,12 +2064,12 @@
     }
 
     const maxFileSize =
-      100 * 1024 * 1024;
+      25 * 1024 * 1024;
 
     if (file.size > maxFileSize) {
       showToast(
         elements,
-        "File size 100 MB se zyada nahi ho sakti.",
+        "File size 25 MB se zyada nahi ho sakti.",
         "error"
       );
 
@@ -2323,6 +2337,11 @@
 
     elements.activeChatAvatar.src =
       avatarUrl;
+
+    elements.activeChatAvatar.onerror =
+      function hideMissingAvatar() {
+        this.style.visibility = "hidden";
+      };
 
     elements.activeChatAvatar.alt =
       user.fullName ||

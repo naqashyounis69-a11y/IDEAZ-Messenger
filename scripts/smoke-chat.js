@@ -2,6 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
+const baseUrl = process.env.SMOKE_BASE_URL || `http://127.0.0.1:${process.env.PORT || 3000}`;
 
 async function ensureDemoUsers() {
   const users = [
@@ -31,7 +32,7 @@ async function ensureDemoUsers() {
 }
 
 async function request(path, options = {}) {
-  const res = await fetch(`http://127.0.0.1:3000${path}`, options);
+  const res = await fetch(`${baseUrl}${path}`, options);
   const text = await res.text();
   let body;
 

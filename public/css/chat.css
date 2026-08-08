@@ -662,6 +662,7 @@ img {
   min-width: 0;
   height: 100vh;
   position: relative;
+  overflow: hidden;
   background:
     radial-gradient(
       circle at 20% 15%,
@@ -743,8 +744,13 @@ img {
    ========================================================= */
 
 .active-chat-panel {
+  min-height: 0;
+  max-height: 100vh;
   height: 100%;
   display: grid;
+  overflow: hidden;
+  align-items: start;
+  align-content: start;
   grid-template-rows:
     auto
     auto
@@ -752,8 +758,20 @@ img {
     auto
     auto
     auto
-    auto;
+    max-content;
 }
+
+.active-chat-panel > * {
+  width: 100%;
+}
+
+.active-chat-panel > .chat-header { grid-row: 1; }
+.active-chat-panel > .message-search-bar { grid-row: 2; }
+.active-chat-panel > .messages-viewport { grid-row: 3; }
+.active-chat-panel > .typing-indicator { grid-row: 4; }
+.active-chat-panel > .reply-preview { grid-row: 5; }
+.active-chat-panel > .attachment-preview { grid-row: 6; }
+.active-chat-panel > .message-composer { grid-row: 7; }
 
 .chat-header {
   min-height: var(--chat-header-height);
@@ -792,6 +810,27 @@ img {
   object-fit: cover;
   background: var(--surface-solid);
 }
+
+.chat-avatar-button,
+.profile-mini-button {
+  background: radial-gradient(circle at 35% 30%, var(--primary-light), var(--primary));
+}
+
+html[data-theme="light"] .conversation-item.active {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.16), rgba(37, 99, 235, 0.1));
+}
+
+html[data-theme="light"] .message-row.incoming .message-bubble {
+  border: 1px solid rgba(51, 65, 85, 0.1);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme="dark"] .message-row.incoming .message-bubble {
+  border: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+html[data-theme="dark"] audio { color-scheme: dark; }
+html[data-theme="light"] audio { color-scheme: light; }
 
 .chat-header-online-badge {
   width: 13px;
@@ -863,6 +902,8 @@ img {
 
 .messages-viewport {
   min-height: 0;
+  height: 100%;
+  align-self: stretch;
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
@@ -1181,6 +1222,9 @@ img {
 
 .message-composer {
   min-height: var(--composer-min-height);
+  position: relative;
+  z-index: 10;
+  flex: 0 0 auto;
   padding: 11px 14px;
   border-top: 1px solid var(--panel-border);
   background: var(--composer-bg);
@@ -2097,3 +2141,129 @@ img {
     font-size: 27px;
   }
 }
+
+.composer-icon-button.recording {
+  color: #fff;
+  background: var(--danger);
+  animation: recordingPulse 1s infinite;
+}
+
+.voice-message {
+  min-width: min(280px, 62vw);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.voice-message audio {
+  width: 100%;
+  height: 38px;
+}
+
+.chat-image,
+.chat-video {
+  display: block;
+  width: min(360px, 65vw);
+  max-height: 360px;
+  margin-bottom: 7px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.chat-file {
+  min-width: 220px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.conversation-initials {
+  display: grid;
+  place-items: center;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.conversation-item time {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.conversation-bottom-row small {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.unread-badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  background: var(--primary);
+}
+
+.call-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(2, 6, 23, 0.86);
+  backdrop-filter: blur(18px);
+}
+
+.call-card {
+  width: min(520px, 100%);
+  min-height: 430px;
+  padding: 36px 24px 28px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  text-align: center;
+  background: var(--surface-solid);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+}
+
+.call-avatar {
+  width: 108px;
+  height: 108px;
+  display: grid;
+  place-items: center;
+  border-radius: 34px;
+  color: #fff;
+  font-size: 30px;
+  font-weight: 850;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+}
+
+.call-card h2 { margin: 22px 0 6px; font-size: 28px; }
+.call-card p { margin: 0 0 28px; color: var(--text-secondary); }
+.call-actions { display: flex; gap: 20px; position: relative; z-index: 3; }
+.call-control { width: 58px; height: 58px; border: 0; border-radius: 50%; color: #fff; font-size: 20px; background: #334155; cursor: pointer; }
+.call-control.accept { background: #16a34a; }
+.call-control.reject { background: #ef4444; }
+.call-control.off { background: #64748b; opacity: .7; }
+.remote-video { width: 100%; height: 100%; position: absolute; inset: 0; object-fit: cover; background: #020617; }
+.local-video { width: 130px; height: 170px; position: absolute; right: 16px; top: 16px; z-index: 2; object-fit: cover; border: 2px solid rgba(255,255,255,.7); border-radius: 18px; background: #111827; }
+.remote-video:not(.hidden) ~ .call-avatar { display: none; }
+.remote-video:not(.hidden) ~ h2, .remote-video:not(.hidden) ~ p { position: relative; z-index: 3; padding: 4px 10px; border-radius: 10px; background: rgba(2,6,23,.6); }
