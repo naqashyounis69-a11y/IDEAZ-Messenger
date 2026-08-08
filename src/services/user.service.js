@@ -235,10 +235,32 @@ async function updateUserPresence({
   return sanitizeUser(user);
 }
 
+async function updateProfile({ userId, fullName, about, avatar }) {
+  const name = String(fullName || "").trim();
+  const bio = String(about || "").trim();
+  const avatarValue = avatar == null ? undefined : String(avatar).trim();
+  if (name.length < 2 || name.length > 60) {
+    throw { statusCode: 400, message: "Full name 2 se 60 characters honi chahiye." };
+  }
+  if (bio.length > 160) {
+    throw { statusCode: 400, message: "About maximum 160 characters ho sakta hai." };
+  }
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      fullName: name,
+      about: bio || null,
+      ...(avatarValue !== undefined ? { avatar: avatarValue || null } : {}),
+    },
+  });
+  return sanitizeUser(user);
+}
+
 module.exports = {
   searchUsers,
   getUserById,
   getAllUsers,
   updateUserPresence,
+  updateProfile,
   sanitizeUser,
 };

@@ -32,6 +32,7 @@
     logout: () => request("/auth/logout", { method: "POST" }),
     users: () => request("/users"),
     searchUsers: (query) => request(`/users/search?q=${encodeURIComponent(query)}`),
+    updateProfile: (data) => request("/users/me", { method: "PATCH", body: JSON.stringify(data) }),
     conversations: () => request("/messages/conversations"),
     messages: (id) => request(`/messages/user/${id}`),
     sendMessage: (data) => request("/messages", { method: "POST", body: JSON.stringify(data) }),

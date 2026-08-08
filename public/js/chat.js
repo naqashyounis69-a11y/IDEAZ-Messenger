@@ -201,6 +201,17 @@
           "profileSettingsButton"
         ),
 
+      profileModal: document.getElementById("profileModal"),
+      closeProfileModal: document.getElementById("closeProfileModal"),
+      cancelProfileButton: document.getElementById("cancelProfileButton"),
+      profileForm: document.getElementById("profileForm"),
+      profileAvatarInput: document.getElementById("profileAvatarInput"),
+      profileAvatarPreview: document.getElementById("profileAvatarPreview"),
+      profileUsernameInput: document.getElementById("profileUsernameInput"),
+      profileFullNameInput: document.getElementById("profileFullNameInput"),
+      profileAboutInput: document.getElementById("profileAboutInput"),
+      saveProfileButton: document.getElementById("saveProfileButton"),
+
       logoutButton:
         document.getElementById(
           "logoutButton"
@@ -677,11 +688,7 @@
             elements.profileMenu
           );
 
-          showToast(
-            elements,
-            "Profile page next step mein add hogi.",
-            "warning"
-          );
+          openProfileEditor(elements, state);
         }
       );
     }
@@ -697,11 +704,7 @@
             elements.profileMenu
           );
 
-          showToast(
-            elements,
-            "Settings module next phase mein add hoga.",
-            "warning"
-          );
+          openProfileEditor(elements, state);
         }
       );
     }
@@ -712,14 +715,30 @@
       elements.openSettingsButton.addEventListener(
         "click",
         function () {
-          showToast(
-            elements,
-            "Settings module next phase mein add hoga.",
-            "warning"
-          );
+          openProfileEditor(elements, state);
         }
       );
     }
+
+    [elements.closeProfileModal, elements.cancelProfileButton].filter(Boolean).forEach((button) => {
+      button.addEventListener("click", () => hideElement(elements.profileModal));
+    });
+    elements.profileModal?.addEventListener("click", (event) => {
+      if (event.target === elements.profileModal) hideElement(elements.profileModal);
+    });
+    elements.profileAvatarInput?.addEventListener("change", () => {
+      const file = elements.profileAvatarInput.files?.[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) {
+        elements.profileAvatarInput.value = "";
+        return showToast(elements, "Profile photo maximum 5 MB ho sakti hai.", "error");
+      }
+      elements.profileAvatarPreview.src = URL.createObjectURL(file);
+    });
+    elements.profileForm?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      saveProfile(elements, state);
+    });
 
     if (elements.newChatButton) {
       elements.newChatButton.addEventListener(
@@ -1455,6 +1474,45 @@
           window.IDEAZ_CONFIG.APP_VERSION ||
           "1.0.0"
         }`;
+    }
+  }
+
+  function openProfileEditor(elements, state) {
+    const user = state.currentUser;
+    if (!user || !elements.profileModal) return;
+    elements.profileUsernameInput.value = user.username || "";
+    elements.profileFullNameInput.value = user.fullName || "";
+    elements.profileAboutInput.value = user.about || "";
+    elements.profileAvatarPreview.src = user.avatar || "/assets/default-avatar.svg";
+    elements.profileAvatarInput.value = "";
+    showElement(elements.profileModal);
+  }
+
+  async function saveProfile(elements, state) {
+    const button = elements.saveProfileButton;
+    button.disabled = true;
+    button.textContent = "Saving...";
+    try {
+      let avatar = state.currentUser.avatar || null;
+      const photo = elements.profileAvatarInput.files?.[0];
+      if (photo) {
+        const uploaded = await window.IDEAZ_API.upload(photo);
+        avatar = uploaded.data.file;
+      }
+      const response = await window.IDEAZ_API.updateProfile({
+        fullName: elements.profileFullNameInput.value.trim(),
+        about: elements.profileAboutInput.value.trim(),
+        avatar,
+      });
+      state.currentUser = response.data.user;
+      renderCurrentUser(elements, state.currentUser);
+      hideElement(elements.profileModal);
+      showToast(elements, "Profile save ho gayi.", "success");
+    } catch (error) {
+      showToast(elements, error.message || "Profile save nahi ho saki.", "error");
+    } finally {
+      button.disabled = false;
+      button.textContent = "Save Profile";
     }
   }
 

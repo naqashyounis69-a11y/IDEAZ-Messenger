@@ -48,6 +48,11 @@ router.patch(
   userController.updatePresence
 );
 
+router.patch(
+  "/me",
+  userController.updateProfile
+);
+
 /*
   GET /api/users/:userId
   Kisi specific user ki public profile.

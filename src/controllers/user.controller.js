@@ -180,9 +180,24 @@ async function updatePresence(
   }
 }
 
+async function updateProfile(req, res, next) {
+  try {
+    const user = await userService.updateProfile({
+      userId: req.user.id,
+      fullName: req.body.fullName,
+      about: req.body.about,
+      avatar: req.body.avatar,
+    });
+    return sendSuccess(res, 200, "Profile update ho gayi.", { user });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   searchUsers,
   getUserById,
   getAllUsers,
   updatePresence,
+  updateProfile,
 };
