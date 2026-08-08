@@ -6,4 +6,8 @@ uploads/
 *.log
 .DS_Store
 Thumbs.db
-
+desktop/**/bin/
+desktop/**/obj/
+desktop/**/publish/
+desktop/**/dist/
+IDEAZ-Remote-Support-Windows.zip
