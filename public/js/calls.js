@@ -37,6 +37,7 @@
     byId("endCallButton")?.addEventListener("click", endCall);
     byId("toggleMuteButton")?.addEventListener("click", toggleMute);
     byId("toggleCameraButton")?.addEventListener("click", toggleCamera);
+    byId("enableCallAudioButton")?.addEventListener("click", enableCallAudio);
     byId("callOverlay")?.addEventListener("click", playRemoteMedia);
     rtcConfigPromise = loadRtcConfig();
   }
@@ -47,7 +48,11 @@
       if (!response.ok) return;
       const config = await response.json();
       if (Array.isArray(config.iceServers) && config.iceServers.length) {
-        rtcConfig = { ...rtcConfig, iceServers: config.iceServers };
+        rtcConfig = {
+          ...rtcConfig,
+          iceServers: config.iceServers,
+          iceTransportPolicy: config.hasTurn ? "relay" : "all",
+        };
       }
     } catch (error) {
       console.warn("RTC config unavailable; using STUN fallback.", error);
@@ -100,7 +105,7 @@
       socket.emit("call:answer", { targetUserId: pendingOffer.fromUserId, answer });
       pendingOffer = null;
       showActiveControls();
-      byId("callStatusText").textContent = "Connected";
+      byId("callStatusText").textContent = "Media connect ho raha hai...";
     } catch (error) {
       rejectCall();
       notify("Camera/microphone permission allow karein.", "warning");
@@ -113,7 +118,7 @@
     await peer.setRemoteDescription(payload.answer);
     await flushPendingCandidates();
     showActiveControls();
-    byId("callStatusText").textContent = "Connected";
+    byId("callStatusText").textContent = "Media connect ho raha hai...";
   }
 
   async function receiveIceCandidate(payload) {
@@ -143,8 +148,10 @@
       remoteAudio.volume = 1;
       remoteAudio.muted = false;
       remoteVideo.srcObject = remoteStream;
+      remoteVideo.muted = true;
       playRemoteMedia().catch(() => {
-        byId("callStatusText").textContent = "Speaker ke liye call screen par click karein";
+        byId("callStatusText").textContent = "Speaker on button dabayein";
+        byId("enableCallAudioButton")?.classList.remove("hidden");
       });
       if (activeType === "video") remoteVideo.play().catch(() => {});
     };
@@ -154,12 +161,18 @@
     peer.onconnectionstatechange = () => {
       if (peer?.connectionState === "connected") {
         byId("callStatusText").textContent = "Connected";
-        playRemoteMedia().catch(() => {});
+        playRemoteMedia().catch(() => {
+          byId("callStatusText").textContent = "Connected — Speaker on dabayein";
+          byId("enableCallAudioButton")?.classList.remove("hidden");
+        });
       } else if (peer?.connectionState === "failed") {
         closeCall("Network call connect nahi kar saka. TURN relay check karein.");
       }
     };
     peer.oniceconnectionstatechange = () => {
+      if (["new", "checking"].includes(peer?.iceConnectionState)) {
+        byId("callStatusText").textContent = "Secure relay connect ho raha hai...";
+      }
       if (peer?.iceConnectionState === "disconnected") {
         byId("callStatusText").textContent = "Network dobara connect ho raha hai...";
         peer.restartIce?.();
@@ -177,6 +190,17 @@
     const remoteVideo = byId("remoteVideo");
     if (activeType === "video" && remoteVideo?.srcObject) {
       await remoteVideo.play().catch(() => {});
+    }
+  }
+
+  async function enableCallAudio(event) {
+    event?.stopPropagation();
+    try {
+      await playRemoteMedia();
+      byId("enableCallAudioButton")?.classList.add("hidden");
+      if (peer?.connectionState === "connected") byId("callStatusText").textContent = "Connected";
+    } catch (error) {
+      notify("Phone ka media volume barhayein aur Speaker on dobara dabayein.", "warning");
     }
   }
 
@@ -224,6 +248,7 @@
     byId("callStatusText").textContent = status;
     byId("incomingCallActions").classList.toggle("hidden", !incoming);
     byId("activeCallActions").classList.toggle("hidden", incoming);
+    byId("enableCallAudioButton")?.classList.add("hidden");
     byId("toggleCameraButton").classList.toggle("hidden", activeType !== "video");
   }
 
