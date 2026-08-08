@@ -1,2 +1,24 @@
-<!doctype html><html lang="en" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Create an IDEAZ Messenger account"><title>Register · IDEAZ Messenger</title><link rel="stylesheet" href="/css/theme.css"><link rel="stylesheet" href="/css/auth.css"></head><body><button id="themeButton" class="theme-button" aria-label="Toggle theme">◐</button><main class="auth-shell"><section class="auth-intro"><div class="brand"><span class="brand-mark">IZ</span>IDEAZ Messenger</div><div><h1>Private circle. Real conversations.</h1><p>Account banayein aur apne logon ke saath messaging shuru karein.</p></div><div class="privacy">🔒 Secure account access</div></section><section class="auth-card"><h2>Create account</h2><p class="sub">Sirf chand details—phir aap chat ke liye ready hain.</p><form data-auth-form="register"><div class="field"><label for="fullName">Full name</label><input id="fullName" name="fullName" autocomplete="name" required minlength="2" placeholder="Ahmed Khan"></div><div class="field"><label for="username">Username</label><input id="username" name="username" autocomplete="username" required minlength="3" pattern="[a-z0-9._]+" placeholder="ahmed.khan"></div><div class="field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="new-password" required minlength="6" placeholder="At least 6 characters"></div><div class="field"><label for="pin">Quick login PIN</label><input id="pin" name="pin" inputmode="numeric" autocomplete="new-password" required pattern="[0-9]{4,6}" placeholder="4–6 digits"></div><button class="primary" type="submit">Create account</button><p id="formMessage" class="message" role="status"></p></form><p class="switch">Already registered? <a href="/login">Login</a></p></section></main><script src="/js/config.js"></script><script src="/js/storage.js"></script><script src="/js/api.js"></script><script src="/js/auth.js"></script></body></html>
-
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="Create an IDEAZ Messenger account">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/assets/ideaz-icon.svg">
+  <link rel="apple-touch-icon" href="/assets/ideaz-icon.svg">
+  <title>Register · IDEAZ Messenger</title>
+  <link rel="stylesheet" href="/css/theme.css"><link rel="stylesheet" href="/css/auth.css"><link rel="stylesheet" href="/css/pwa.css">
+</head>
+<body>
+  <button id="themeButton" class="theme-button" aria-label="Toggle theme">◐</button>
+  <main class="auth-shell">
+    <section class="auth-intro"><div class="brand"><span class="brand-mark">IZ</span>IDEAZ Messenger</div><div><h1>Private circle. Real conversations.</h1><p>Account banayein aur apne logon ke saath messaging shuru karein.</p></div><div class="privacy">🔒 Secure account access</div></section>
+    <section class="auth-card"><h2>Create account</h2><p class="sub">Sirf chand details—phir aap chat ke liye ready hain.</p><form data-auth-form="register"><div class="field"><label for="fullName">Full name</label><input id="fullName" name="fullName" autocomplete="name" required minlength="2" placeholder="Ahmed Khan"></div><div class="field"><label for="username">Username</label><input id="username" name="username" autocomplete="username" required minlength="3" pattern="[a-z0-9._]+" placeholder="ahmed.khan"></div><div class="field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="new-password" required minlength="4" placeholder="At least 4 characters"></div><div class="field"><label for="pin">Quick login PIN</label><input id="pin" name="pin" inputmode="numeric" autocomplete="new-password" required pattern="[0-9]{4,6}" placeholder="4–6 digits"></div><button class="primary" type="submit">Create account</button><p id="formMessage" class="message" role="status"></p></form><p class="switch">Already registered? <a href="/login">Login</a></p></section>
+  </main>
+  <script src="/js/config.js"></script><script src="/js/storage.js"></script><script src="/js/api.js"></script><script src="/js/auth.js"></script><script src="/js/pwa.js"></script>
+</body>
+</html>
