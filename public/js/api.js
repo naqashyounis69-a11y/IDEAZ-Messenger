@@ -37,6 +37,10 @@
     messages: (id) => request(`/messages/user/${id}`),
     sendMessage: (data) => request("/messages", { method: "POST", body: JSON.stringify(data) }),
     markSeen: (id) => request(`/messages/user/${id}/seen`, { method: "PATCH" }),
+    statuses: () => request("/statuses"),
+    postStatus: (data) => request("/statuses", { method: "POST", body: JSON.stringify(data) }),
+    viewStatus: (id) => request(`/statuses/${id}/view`, { method: "PATCH" }),
+    deleteStatus: (id) => request(`/statuses/${id}`, { method: "DELETE" }),
     upload: (file) => {
       const form = new FormData();
       form.append("file", file);

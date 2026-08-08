@@ -231,6 +231,26 @@
           )
         ),
 
+      statusModal: document.getElementById("statusModal"),
+      closeStatusModal: document.getElementById("closeStatusModal"),
+      statusForm: document.getElementById("statusForm"),
+      statusTextInput: document.getElementById("statusTextInput"),
+      statusImageInput: document.getElementById("statusImageInput"),
+      statusColorInput: document.getElementById("statusColorInput"),
+      statusImageName: document.getElementById("statusImageName"),
+      postStatusButton: document.getElementById("postStatusButton"),
+      statusList: document.getElementById("statusList"),
+      statusEmpty: document.getElementById("statusEmpty"),
+      statusViewer: document.getElementById("statusViewer"),
+      closeStatusViewer: document.getElementById("closeStatusViewer"),
+      statusViewerAvatar: document.getElementById("statusViewerAvatar"),
+      statusViewerName: document.getElementById("statusViewerName"),
+      statusViewerTime: document.getElementById("statusViewerTime"),
+      statusViewerImage: document.getElementById("statusViewerImage"),
+      statusViewerText: document.getElementById("statusViewerText"),
+      statusViewerViews: document.getElementById("statusViewerViews"),
+      deleteStatusButton: document.getElementById("deleteStatusButton"),
+
       conversationSearchInput:
         document.getElementById(
           "conversationSearchInput"
@@ -642,10 +662,21 @@
               elements,
               button.dataset.section
             );
+            if (button.dataset.section === "status") openStatusCenter(elements, state);
           }
         );
       }
     );
+
+    elements.closeStatusModal?.addEventListener("click", () => hideElement(elements.statusModal));
+    elements.statusModal?.addEventListener("click", (event) => { if (event.target === elements.statusModal) hideElement(elements.statusModal); });
+    elements.closeStatusViewer?.addEventListener("click", () => hideElement(elements.statusViewer));
+    elements.statusViewer?.addEventListener("click", (event) => { if (event.target === elements.statusViewer) hideElement(elements.statusViewer); });
+    elements.statusImageInput?.addEventListener("change", () => {
+      const file = elements.statusImageInput.files?.[0];
+      elements.statusImageName.textContent = file ? file.name : "";
+    });
+    elements.statusForm?.addEventListener("submit", (event) => { event.preventDefault(); postStatus(elements, state); });
 
     if (
       elements.profileMenuButton
@@ -1639,12 +1670,106 @@
       }
     );
 
-    if (section !== "chats") {
+    if (section !== "chats" && section !== "status") {
       showToast(
         elements,
         `${capitalize(section)} module next phase mein active hoga.`,
         "warning"
       );
+    }
+  }
+
+  async function openStatusCenter(elements, state) {
+    showElement(elements.statusModal);
+    elements.statusList.innerHTML = '<div class="modal-empty-state">Statuses load ho rahe hain...</div>';
+    elements.statusEmpty.classList.add("hidden");
+    try {
+      const response = await window.IDEAZ_API.statuses();
+      state.statuses = response.data.statuses || [];
+      renderStatusList(elements, state);
+    } catch (error) {
+      elements.statusList.innerHTML = "";
+      elements.statusEmpty.textContent = error.message || "Statuses load nahi ho sake.";
+      elements.statusEmpty.classList.remove("hidden");
+    }
+  }
+
+  function renderStatusList(elements, state) {
+    elements.statusList.innerHTML = "";
+    elements.statusEmpty.classList.toggle("hidden", Boolean(state.statuses?.length));
+    (state.statuses || []).forEach((status) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `status-list-item${status.viewed ? " viewed" : ""}`;
+      const avatar = document.createElement("img");
+      avatar.src = status.author.avatar || "/assets/default-avatar.svg";
+      avatar.alt = "";
+      const info = document.createElement("span");
+      const name = document.createElement("strong");
+      name.textContent = status.author.id === state.currentUser.id ? "My Status" : status.author.fullName;
+      const preview = document.createElement("small");
+      preview.textContent = status.text || (status.media ? "Photo" : "Status");
+      info.append(name, preview);
+      const time = document.createElement("time");
+      time.textContent = new Date(status.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      button.append(avatar, info, time);
+      button.addEventListener("click", () => viewStatus(elements, state, status));
+      elements.statusList.appendChild(button);
+    });
+  }
+
+  async function postStatus(elements, state) {
+    const text = elements.statusTextInput.value.trim();
+    const image = elements.statusImageInput.files?.[0];
+    if (!text && !image) return showToast(elements, "Text ya image add karein.", "warning");
+    if (image && image.size > 10 * 1024 * 1024) return showToast(elements, "Status image maximum 10 MB ho sakti hai.", "error");
+    const button = elements.postStatusButton;
+    button.disabled = true;
+    button.textContent = "Posting...";
+    try {
+      let media = null;
+      let mediaType = null;
+      if (image) {
+        const uploaded = await window.IDEAZ_API.upload(image);
+        media = uploaded.data.file;
+        mediaType = image.type;
+      }
+      await window.IDEAZ_API.postStatus({ text, media, mediaType, color: elements.statusColorInput.value });
+      elements.statusForm.reset();
+      elements.statusColorInput.value = "#4f46e5";
+      elements.statusImageName.textContent = "";
+      showToast(elements, "Status 24 hours ke liye post ho gaya.", "success");
+      await openStatusCenter(elements, state);
+    } catch (error) {
+      showToast(elements, error.message || "Status post nahi ho saka.", "error");
+    } finally {
+      button.disabled = false;
+      button.textContent = "Post Status";
+    }
+  }
+
+  async function viewStatus(elements, state, status) {
+    elements.statusViewerAvatar.src = status.author.avatar || "/assets/default-avatar.svg";
+    elements.statusViewerName.textContent = status.author.fullName;
+    elements.statusViewerTime.textContent = new Date(status.createdAt).toLocaleString();
+    elements.statusViewerText.textContent = status.text || "";
+    elements.statusViewerText.parentElement.style.background = status.color || "#4f46e5";
+    elements.statusViewerImage.classList.toggle("hidden", !status.media);
+    if (status.media) elements.statusViewerImage.src = status.media;
+    const own = status.author.id === state.currentUser.id;
+    elements.statusViewerViews.textContent = own ? `${status._count?.views || 0} views` : "";
+    elements.deleteStatusButton.classList.toggle("hidden", !own);
+    elements.deleteStatusButton.onclick = own ? async () => {
+      try {
+        await window.IDEAZ_API.deleteStatus(status.id);
+        hideElement(elements.statusViewer);
+        await openStatusCenter(elements, state);
+      } catch (error) { showToast(elements, error.message, "error"); }
+    } : null;
+    showElement(elements.statusViewer);
+    if (!own && !status.viewed) {
+      status.viewed = true;
+      window.IDEAZ_API.viewStatus(status.id).catch(() => {});
     }
   }
 

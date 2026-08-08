@@ -29,7 +29,7 @@
 
   <link
     rel="stylesheet"
-    href="/css/chat.css?v=12"
+    href="/css/chat.css?v=13"
   >
 
   <link
@@ -911,6 +911,39 @@
     </section>
   </div>
 
+  <!-- 24-hour Status center -->
+  <div id="statusModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="statusModalTitle">
+    <section class="modal-card status-center-card">
+      <header class="modal-header">
+        <div><p class="modal-eyebrow">24 HOURS</p><h2 id="statusModalTitle">Status</h2></div>
+        <button id="closeStatusModal" class="icon-button" type="button" aria-label="Close status">×</button>
+      </header>
+      <form id="statusForm" class="status-create-form">
+        <textarea id="statusTextInput" maxlength="700" rows="3" placeholder="Type a status..."></textarea>
+        <div class="status-create-row">
+          <label class="secondary-button status-image-button">🖼️ Add image<input id="statusImageInput" class="hidden" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label>
+          <input id="statusColorInput" type="color" value="#4f46e5" aria-label="Status background color">
+          <button id="postStatusButton" class="primary-button" type="submit">Post Status</button>
+        </div>
+        <div id="statusImageName" class="status-image-name"></div>
+      </form>
+      <div id="statusList" class="status-list"></div>
+      <div id="statusEmpty" class="modal-empty-state">Abhi koi active status nahi hai.</div>
+    </section>
+  </div>
+
+  <!-- Status viewer -->
+  <div id="statusViewer" class="status-viewer hidden" role="dialog" aria-modal="true">
+    <button id="closeStatusViewer" class="status-viewer-close" type="button" aria-label="Close viewer">×</button>
+    <div class="status-viewer-card">
+      <div class="status-viewer-author"><img id="statusViewerAvatar" src="/assets/default-avatar.svg" alt=""><div><strong id="statusViewerName"></strong><small id="statusViewerTime"></small></div></div>
+      <img id="statusViewerImage" class="status-viewer-image hidden" alt="Status image">
+      <p id="statusViewerText"></p>
+      <small id="statusViewerViews" class="status-viewer-views"></small>
+      <button id="deleteStatusButton" class="secondary-button danger-text hidden" type="button">Delete Status</button>
+    </div>
+  </div>
+
   <!-- Profile editor -->
   <div id="profileModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
     <section class="modal-card profile-editor-card">
@@ -1070,7 +1103,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/config.js"></script>
   <script src="/js/storage.js"></script>
-  <script src="/js/api.js?v=8"></script>
+  <script src="/js/api.js?v=9"></script>
   <script src="/js/socket.js?v=6"></script>
   <script src="/js/chat.socket.js?v=6"></script>
   <script src="/js/typing.js"></script>
@@ -1081,7 +1114,7 @@
   <script src="/js/uploads.js?v=8"></script>
   <script src="/js/calls.js?v=10"></script>
   <script src="/js/ui.js"></script>
-  <script src="/js/chat.js?v=15"></script>
+  <script src="/js/chat.js?v=16"></script>
   <script src="/js/pwa.js?v=2"></script>
 </body>
 </html>

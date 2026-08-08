@@ -23,9 +23,41 @@ model User {
 
   sentMessages     Message[] @relation("SenderMessages")
   receivedMessages Message[] @relation("ReceiverMessages")
+  statuses         Status[]
+  statusViews      StatusView[]
 
   @@index([username])
   @@index([online])
+}
+
+model Status {
+  id        String       @id @default(uuid())
+  authorId  String
+  text      String?
+  media     String?
+  mediaType String?
+  color     String       @default("#4f46e5")
+  createdAt DateTime     @default(now())
+  expiresAt DateTime
+
+  author User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  views  StatusView[]
+
+  @@index([authorId])
+  @@index([expiresAt])
+}
+
+model StatusView {
+  id       String   @id @default(uuid())
+  statusId String
+  viewerId String
+  viewedAt DateTime @default(now())
+
+  status Status @relation(fields: [statusId], references: [id], onDelete: Cascade)
+  viewer User   @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+
+  @@unique([statusId, viewerId])
+  @@index([viewerId])
 }
 
 model Message {

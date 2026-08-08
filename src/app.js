@@ -11,6 +11,7 @@ const messageRoutes = require("./routes/message.routes");
 const conversationRoutes = require("./routes/conversation.routes");
 const uploadRoutes = require("./routes/upload.routes");
 const remoteRoutes = require("./routes/remote.routes");
+const statusRoutes = require("./routes/status.routes");
 
 const {
   notFound,
@@ -263,6 +264,8 @@ app.use(
   "/api/uploads",
   uploadRoutes
 );
+
+app.use("/api/statuses", statusRoutes);
 
 /*
 |--------------------------------------------------------------------------
