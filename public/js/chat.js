@@ -1133,7 +1133,7 @@
       elements.emojiButton.addEventListener(
         "click",
         function () {
-          insertEmoji(
+          toggleEmojiPicker(
             elements,
             "😊"
           );
@@ -2247,6 +2247,36 @@
     input.dispatchEvent(
       new Event("input")
     );
+  }
+
+  function toggleEmojiPicker(elements) {
+    let picker = document.getElementById("emojiPicker");
+    if (!picker) {
+      const emojis = [
+        "😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃","😉","😍","🥰","😘","😋","😎","🤩","🥳",
+        "😢","😭","😤","😡","🤬","😱","😴","🤔","🤗","🤫","🤭","🫡","🫠","🥺","😬","🙄","😏","😜","🤪","🤓",
+        "👍","👎","👌","✌️","🤞","🤟","🤘","👏","🙌","🫶","🙏","💪","👋","🤝","💅","👀","🧠","👑","💍","💄",
+        "❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❤️‍🔥","💕","💞","💓","💗","💖","💘","💝","💯","✨",
+        "🔥","⭐","🌟","⚡","☀️","🌙","☁️","🌈","🎉","🎊","🎂","🎁","🎈","🏆","⚽","🏏","🎮","🎵","🎶","📸",
+        "🍕","🍔","🍟","🌮","🍗","🍎","🍓","🍉","🍫","🍰","☕","🥤","🚗","✈️","🏠","📱","💻","⌚","✅","❌"
+      ];
+      picker = document.createElement("div");
+      picker.id = "emojiPicker";
+      picker.className = "emoji-picker hidden";
+      picker.setAttribute("role", "dialog");
+      picker.setAttribute("aria-label", "Emoji picker");
+      picker.innerHTML = `<div class="emoji-picker-header"><strong>Emojis</strong><button type="button" aria-label="Close emoji picker">×</button></div><div class="emoji-grid">${emojis.map((emoji) => `<button type="button" class="emoji-option" data-emoji="${emoji}" aria-label="${emoji}">${emoji}</button>`).join("")}</div>`;
+      elements.messageInput.closest(".message-composer").appendChild(picker);
+      picker.addEventListener("click", function (event) {
+        const option = event.target.closest(".emoji-option");
+        if (option) {
+          insertEmoji(elements, option.dataset.emoji);
+          return;
+        }
+        if (event.target.closest('[aria-label="Close emoji picker"]')) picker.classList.add("hidden");
+      });
+    }
+    picker.classList.toggle("hidden");
   }
 
   function showCallPlaceholder(

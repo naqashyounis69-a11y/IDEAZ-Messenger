@@ -1951,6 +1951,13 @@ html[data-theme="light"] audio { color-scheme: light; }
    Tablet / Mobile
    ========================================================= */
 
+.emoji-picker{position:absolute;left:12px;bottom:calc(100% + 8px);width:min(390px,calc(100vw - 24px));max-height:min(360px,48vh);z-index:1250;overflow:hidden;border:1px solid var(--panel-border);border-radius:20px;background:var(--panel-bg);box-shadow:0 20px 55px rgba(0,0,0,.38)}
+.emoji-picker-header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--panel-border)}
+.emoji-picker-header button{width:38px;height:38px;border:0;border-radius:12px;background:transparent;color:inherit;font-size:24px;cursor:pointer}
+.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;padding:9px;max-height:290px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.emoji-option{min-width:0;height:42px;border:0;border-radius:10px;background:transparent;font-size:25px;cursor:pointer;touch-action:manipulation}
+.emoji-option:hover,.emoji-option:focus-visible{background:var(--hover-bg)}
+
 @media (max-width: 760px) {
   body {
     min-width: 320px;
