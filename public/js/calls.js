@@ -181,22 +181,39 @@
   }
 
   async function prepareMedia(type) {
-    localStream = await navigator.mediaDevices.getUserMedia({
+    const audioStream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true,
         channelCount: 1,
       },
-      video: type === "video" ? {
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-        frameRate: { ideal: 24, max: 30 },
-      } : false,
+      video: false,
     });
+    localStream = new MediaStream(audioStream.getAudioTracks());
+
+    // A denied/busy camera must not stop the call from reaching the other
+    // person. Keep the video call alive with audio and still show their camera.
+    if (type === "video") {
+      try {
+        const cameraStream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            facingMode: { ideal: "user" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 24, max: 30 },
+          },
+        });
+        cameraStream.getVideoTracks().forEach((track) => localStream.addTrack(track));
+      } catch (error) {
+        notify("Camera allow/busy hai; call audio ke saath ja rahi hai.", "warning");
+      }
+    }
+
     const localVideo = byId("localVideo");
     localVideo.srcObject = localStream;
-    localVideo.classList.toggle("hidden", type !== "video");
+    localVideo.classList.toggle("hidden", localStream.getVideoTracks().length === 0);
     byId("remoteVideo").classList.toggle("hidden", type !== "video");
   }
 
