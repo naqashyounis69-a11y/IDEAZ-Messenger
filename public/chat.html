@@ -29,7 +29,7 @@
 
   <link
     rel="stylesheet"
-    href="/css/chat.css?v=11"
+    href="/css/chat.css?v=12"
   >
 
   <link
@@ -927,13 +927,29 @@
         <label>Username<input id="profileUsernameInput" type="text" readonly></label>
         <label>Full Name<input id="profileFullNameInput" type="text" minlength="2" maxlength="60" required></label>
         <label>About<textarea id="profileAboutInput" rows="3" maxlength="160" placeholder="Tell something about yourself"></textarea></label>
-        <label class="profile-privacy-toggle">
-          <span><strong>Can anyone send me messages?</strong><small>Off karne par koi user naya message nahi bhej sakega.</small></span>
-          <input id="allowMessagesToggle" type="checkbox" checked>
-        </label>
         <div class="profile-form-actions">
           <button id="cancelProfileButton" type="button" class="secondary-button">Cancel</button>
           <button id="saveProfileButton" type="submit" class="primary-button">Save Profile</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <!-- Settings editor -->
+  <div id="settingsModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+    <section class="modal-card settings-editor-card">
+      <header class="modal-header">
+        <div><p class="modal-eyebrow">Privacy</p><h2 id="settingsModalTitle">Settings</h2></div>
+        <button id="closeSettingsModal" class="icon-button" type="button" aria-label="Close settings">×</button>
+      </header>
+      <form id="settingsForm" class="profile-editor-form">
+        <label class="profile-privacy-toggle">
+          <span><strong>Can anyone send me messages?</strong><small>Off karne par koi user aapko message nahi bhej sakega.</small></span>
+          <input id="allowMessagesToggle" type="checkbox" checked>
+        </label>
+        <div class="profile-form-actions">
+          <button id="cancelSettingsButton" type="button" class="secondary-button">Cancel</button>
+          <button id="saveSettingsButton" type="submit" class="primary-button">Save Settings</button>
         </div>
       </form>
     </section>
@@ -1061,7 +1077,7 @@
   <script src="/js/uploads.js?v=8"></script>
   <script src="/js/calls.js?v=9"></script>
   <script src="/js/ui.js"></script>
-  <script src="/js/chat.js?v=14"></script>
+  <script src="/js/chat.js?v=15"></script>
   <script src="/js/pwa.js?v=2"></script>
 </body>
 </html>

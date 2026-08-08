@@ -212,6 +212,11 @@
       profileAboutInput: document.getElementById("profileAboutInput"),
       allowMessagesToggle: document.getElementById("allowMessagesToggle"),
       saveProfileButton: document.getElementById("saveProfileButton"),
+      settingsModal: document.getElementById("settingsModal"),
+      closeSettingsModal: document.getElementById("closeSettingsModal"),
+      cancelSettingsButton: document.getElementById("cancelSettingsButton"),
+      settingsForm: document.getElementById("settingsForm"),
+      saveSettingsButton: document.getElementById("saveSettingsButton"),
 
       logoutButton:
         document.getElementById(
@@ -705,7 +710,7 @@
             elements.profileMenu
           );
 
-          openProfileEditor(elements, state);
+          openSettingsEditor(elements, state);
         }
       );
     }
@@ -716,7 +721,7 @@
       elements.openSettingsButton.addEventListener(
         "click",
         function () {
-          openProfileEditor(elements, state);
+          openSettingsEditor(elements, state);
         }
       );
     }
@@ -739,6 +744,16 @@
     elements.profileForm?.addEventListener("submit", (event) => {
       event.preventDefault();
       saveProfile(elements, state);
+    });
+    [elements.closeSettingsModal, elements.cancelSettingsButton].filter(Boolean).forEach((button) => {
+      button.addEventListener("click", () => hideElement(elements.settingsModal));
+    });
+    elements.settingsModal?.addEventListener("click", (event) => {
+      if (event.target === elements.settingsModal) hideElement(elements.settingsModal);
+    });
+    elements.settingsForm?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      saveSettings(elements, state);
     });
 
     if (elements.newChatButton) {
@@ -1484,7 +1499,6 @@
     elements.profileUsernameInput.value = user.username || "";
     elements.profileFullNameInput.value = user.fullName || "";
     elements.profileAboutInput.value = user.about || "";
-    elements.allowMessagesToggle.checked = user.allowMessagesFromAnyone !== false;
     elements.profileAvatarPreview.src = user.avatar || "/assets/default-avatar.svg";
     elements.profileAvatarInput.value = "";
     showElement(elements.profileModal);
@@ -1505,7 +1519,6 @@
         fullName: elements.profileFullNameInput.value.trim(),
         about: elements.profileAboutInput.value.trim(),
         avatar,
-        allowMessagesFromAnyone: elements.allowMessagesToggle.checked,
       });
       state.currentUser = response.data.user;
       renderCurrentUser(elements, state.currentUser);
@@ -1516,6 +1529,35 @@
     } finally {
       button.disabled = false;
       button.textContent = "Save Profile";
+    }
+  }
+
+  function openSettingsEditor(elements, state) {
+    if (!state.currentUser || !elements.settingsModal) return;
+    elements.allowMessagesToggle.checked = state.currentUser.allowMessagesFromAnyone !== false;
+    showElement(elements.settingsModal);
+  }
+
+  async function saveSettings(elements, state) {
+    const button = elements.saveSettingsButton;
+    button.disabled = true;
+    button.textContent = "Saving...";
+    try {
+      const user = state.currentUser;
+      const response = await window.IDEAZ_API.updateProfile({
+        fullName: user.fullName,
+        about: user.about || "",
+        avatar: user.avatar || null,
+        allowMessagesFromAnyone: elements.allowMessagesToggle.checked,
+      });
+      state.currentUser = response.data.user;
+      hideElement(elements.settingsModal);
+      showToast(elements, "Settings save ho gayi.", "success");
+    } catch (error) {
+      showToast(elements, error.message || "Settings save nahi ho saki.", "error");
+    } finally {
+      button.disabled = false;
+      button.textContent = "Save Settings";
     }
   }
 
