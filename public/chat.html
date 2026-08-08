@@ -604,12 +604,22 @@
               📎
             </button>
 
+            <div id="attachmentMenu" class="attachment-menu hidden">
+              <button type="button" data-attachment-source="image">🖼️ Photos &amp; Videos</button>
+              <button type="button" data-attachment-source="file">📄 Documents &amp; ZIP</button>
+              <button type="button" data-attachment-source="folder">📁 Select Folder</button>
+              <small>100 MB per file · folder total 1 GB</small>
+            </div>
+
             <input
               id="fileInput"
               class="hidden"
               type="file"
               accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
+              multiple
             >
+            <input id="imageInput" class="hidden" type="file" accept="image/*,video/*" multiple>
+            <input id="folderInput" class="hidden" type="file" webkitdirectory directory multiple>
 
             <div class="message-input-wrapper">
               <textarea
@@ -1023,7 +1033,7 @@
   <script src="/js/uploads.js?v=8"></script>
   <script src="/js/calls.js?v=9"></script>
   <script src="/js/ui.js"></script>
-  <script src="/js/chat.js?v=11"></script>
+  <script src="/js/chat.js?v=12"></script>
   <script src="/js/pwa.js?v=2"></script>
 </body>
 </html>

@@ -45,6 +45,7 @@
       messageSearchOpen: false,
       replyingToMessage: null,
       selectedAttachment: null,
+      selectedAttachments: [],
       socketConnected: false,
     };
 
@@ -449,10 +450,19 @@
           "attachmentButton"
         ),
 
+      attachmentMenu:
+        document.getElementById("attachmentMenu"),
+
       fileInput:
         document.getElementById(
           "fileInput"
         ),
+
+      imageInput:
+        document.getElementById("imageInput"),
+
+      folderInput:
+        document.getElementById("folderInput"),
 
       messageInput:
         document.getElementById(
@@ -1096,24 +1106,32 @@
       elements.attachmentButton.addEventListener(
         "click",
         function () {
-          if (elements.fileInput) {
-            elements.fileInput.click();
-          }
+          elements.attachmentMenu?.classList.toggle("hidden");
         }
       );
     }
 
-    if (elements.fileInput) {
-      elements.fileInput.addEventListener(
+    elements.attachmentMenu?.querySelectorAll("[data-attachment-source]").forEach((button) => {
+      button.addEventListener("click", function () {
+        const source = button.dataset.attachmentSource;
+        const input = source === "image" ? elements.imageInput : source === "folder" ? elements.folderInput : elements.fileInput;
+        elements.attachmentMenu.classList.add("hidden");
+        input?.click();
+      });
+    });
+
+    [elements.fileInput, elements.imageInput, elements.folderInput].filter(Boolean).forEach((input) => {
+      input.addEventListener(
         "change",
         function () {
           handleAttachmentSelection(
             elements,
-            state
+            state,
+            input
           );
         }
       );
-    }
+    });
 
     if (
       elements.removeAttachmentButton
@@ -2002,15 +2020,20 @@
         typeof window.IDEAZ_CONVERSATION.sendMessage ===
           "function"
       ) {
-        await window.IDEAZ_CONVERSATION.sendMessage(
-          {
-            text,
-            attachment:
-              state.selectedAttachment,
-            replyTo:
-              state.replyingToMessage,
+        const attachments = state.selectedAttachments?.length
+          ? state.selectedAttachments
+          : state.selectedAttachment ? [state.selectedAttachment] : [];
+        if (attachments.length) {
+          for (let index = 0; index < attachments.length; index += 1) {
+            await window.IDEAZ_CONVERSATION.sendMessage({
+              text: index === 0 ? text : "",
+              attachment: attachments[index],
+              replyTo: index === 0 ? state.replyingToMessage : null,
+            });
           }
-        );
+        } else {
+          await window.IDEAZ_CONVERSATION.sendMessage({ text, attachment: null, replyTo: state.replyingToMessage });
+        }
       } else {
         showToast(
           elements,
@@ -2055,35 +2078,47 @@
 
   function handleAttachmentSelection(
     elements,
-    state
+    state,
+    input = elements.fileInput
   ) {
-    const file =
-      elements.fileInput.files &&
-      elements.fileInput.files[0];
+    const files = Array.from(input?.files || []);
+    const file = files[0];
 
     if (!file) {
       return;
     }
 
-    const maxFileSize =
-      25 * 1024 * 1024;
+    const maxFileSize = 100 * 1024 * 1024;
+    const maxBatchSize = 1024 * 1024 * 1024;
 
-    if (file.size > maxFileSize) {
+    if (files.some((item) => item.size > maxFileSize)) {
       showToast(
         elements,
-        "File size 25 MB se zyada nahi ho sakti.",
+        "Har file 100 MB se zyada nahi ho sakti.",
         "error"
       );
 
-      elements.fileInput.value = "";
+      input.value = "";
       return;
     }
 
+    if (files.reduce((total, item) => total + item.size, 0) > maxBatchSize) {
+      input.value = "";
+      return showToast(elements, "Selected folder/files ka total 1 GB se zyada nahi ho sakta.", "error");
+    }
+
+    if (files.length > 100) {
+      input.value = "";
+      return showToast(elements, "Ek dafa maximum 100 folder files bhej sakte hain.", "error");
+    }
+
     state.selectedAttachment = file;
+    state.selectedAttachments = files;
 
     renderAttachmentPreview(
       elements,
-      file
+      file,
+      files
     );
 
     showElement(
@@ -2098,7 +2133,8 @@
 
   function renderAttachmentPreview(
     elements,
-    file
+    file,
+    files = [file]
   ) {
     if (
       !elements.attachmentPreviewContent
@@ -2152,6 +2188,14 @@
     info.appendChild(name);
     info.appendChild(size);
 
+    if (files.length > 1) {
+      const count = document.createElement("small");
+      count.textContent = `${files.length} files selected`;
+      count.style.display = "block";
+      count.style.color = "var(--primary)";
+      info.appendChild(count);
+    }
+
     wrapper.appendChild(icon);
     wrapper.appendChild(info);
 
@@ -2165,10 +2209,9 @@
     state
   ) {
     state.selectedAttachment = null;
+    state.selectedAttachments = [];
 
-    if (elements.fileInput) {
-      elements.fileInput.value = "";
-    }
+    [elements.fileInput, elements.imageInput, elements.folderInput].filter(Boolean).forEach((input) => { input.value = ""; });
 
     if (
       elements.attachmentPreviewContent

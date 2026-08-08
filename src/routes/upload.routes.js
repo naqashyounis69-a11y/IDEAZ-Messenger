@@ -26,12 +26,22 @@ const allowedTypes = new Set([
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   "application/zip",
+  "application/x-zip-compressed", "application/x-rar-compressed",
+  "application/vnd.rar", "application/x-7z-compressed",
+  "application/octet-stream",
 ]);
+
+const maximumUploadSize = Math.min(
+  Number(process.env.MAX_UPLOAD_SIZE || 100 * 1024 * 1024),
+  1024 * 1024 * 1024
+);
 
 const upload = multer({
   storage,
-  limits: { fileSize: 25 * 1024 * 1024 },
+  limits: { fileSize: maximumUploadSize },
   fileFilter: (_req, file, callback) => {
     if (!allowedTypes.has(file.mimetype)) {
       return callback(new Error("Yeh file type allowed nahi hai."));
