@@ -10,6 +10,7 @@ const userRoutes = require("./routes/user.routes");
 const messageRoutes = require("./routes/message.routes");
 const conversationRoutes = require("./routes/conversation.routes");
 const uploadRoutes = require("./routes/upload.routes");
+const remoteRoutes = require("./routes/remote.routes");
 
 const {
   notFound,
@@ -137,6 +138,9 @@ const apiLimiter = rateLimit({
   },
 });
 
+// Remote desktop frames and input polling are high-frequency by design.
+// Its password endpoint has a dedicated strict limiter in the router.
+app.use("/api/remote", remoteRoutes);
 app.use("/api", apiLimiter);
 
 // WebRTC network configuration. TURN credentials stay on the server and are
