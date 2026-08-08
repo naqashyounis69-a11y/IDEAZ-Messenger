@@ -139,6 +139,34 @@ const apiLimiter = rateLimit({
 
 app.use("/api", apiLimiter);
 
+// WebRTC network configuration. TURN credentials stay on the server and are
+// only exposed to signed-in app clients through this small runtime config.
+app.get("/api/rtc-config", (req, res) => {
+  const iceServers = [
+    { urls: [
+      "stun:stun.l.google.com:19302",
+      "stun:stun1.l.google.com:19302",
+      "stun:stun.cloudflare.com:3478",
+    ] },
+  ];
+
+  const turnUrls = String(process.env.TURN_URLS || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (turnUrls.length && process.env.TURN_USERNAME && process.env.TURN_CREDENTIAL) {
+    iceServers.push({
+      urls: turnUrls,
+      username: process.env.TURN_USERNAME,
+      credential: process.env.TURN_CREDENTIAL,
+    });
+  }
+
+  res.setHeader("Cache-Control", "no-store");
+  return res.json({ iceServers, hasTurn: iceServers.length > 1 });
+});
+
 /*
 |--------------------------------------------------------------------------
 | Health Check

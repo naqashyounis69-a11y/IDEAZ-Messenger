@@ -12,7 +12,15 @@
   let ringTimer;
   let vibrationTimer;
 
-  const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+  let rtcConfig = {
+    iceServers: [{ urls: [
+      "stun:stun.l.google.com:19302",
+      "stun:stun1.l.google.com:19302",
+      "stun:stun.cloudflare.com:3478",
+    ] }],
+    iceCandidatePoolSize: 10,
+  };
+  let rtcConfigPromise;
   const byId = (id) => document.getElementById(id);
 
   function initialize(value) {
@@ -29,6 +37,21 @@
     byId("endCallButton")?.addEventListener("click", endCall);
     byId("toggleMuteButton")?.addEventListener("click", toggleMute);
     byId("toggleCameraButton")?.addEventListener("click", toggleCamera);
+    byId("callOverlay")?.addEventListener("click", playRemoteMedia);
+    rtcConfigPromise = loadRtcConfig();
+  }
+
+  async function loadRtcConfig() {
+    try {
+      const response = await fetch("/api/rtc-config", { cache: "no-store" });
+      if (!response.ok) return;
+      const config = await response.json();
+      if (Array.isArray(config.iceServers) && config.iceServers.length) {
+        rtcConfig = { ...rtcConfig, iceServers: config.iceServers };
+      }
+    } catch (error) {
+      console.warn("RTC config unavailable; using STUN fallback.", error);
+    }
   }
 
   async function startCall(type) {
@@ -38,6 +61,7 @@
     showOverlay(`${type === "video" ? "Video" : "Voice"} call ja rahi hai...`, false);
     startRinging(false);
     try {
+      await rtcConfigPromise;
       await prepareMedia(type);
       createPeer();
       localStream.getTracks().forEach((track) => peer.addTrack(track, localStream));
@@ -65,6 +89,7 @@
     if (!pendingOffer) return;
     stopRinging();
     try {
+      await rtcConfigPromise;
       await prepareMedia(activeType);
       createPeer();
       localStream.getTracks().forEach((track) => peer.addTrack(track, localStream));
@@ -118,7 +143,7 @@
       remoteAudio.volume = 1;
       remoteAudio.muted = false;
       remoteVideo.srcObject = remoteStream;
-      remoteAudio.play().catch(() => {
+      playRemoteMedia().catch(() => {
         byId("callStatusText").textContent = "Speaker ke liye call screen par click karein";
       });
       if (activeType === "video") remoteVideo.play().catch(() => {});
@@ -127,8 +152,32 @@
       if (event.candidate && activeUser?.id) socket.emit("call:ice-candidate", { targetUserId: activeUser.id, candidate: event.candidate });
     };
     peer.onconnectionstatechange = () => {
-      if (["failed", "disconnected", "closed"].includes(peer?.connectionState)) closeCall("Call disconnect ho gayi.");
+      if (peer?.connectionState === "connected") {
+        byId("callStatusText").textContent = "Connected";
+        playRemoteMedia().catch(() => {});
+      } else if (peer?.connectionState === "failed") {
+        closeCall("Network call connect nahi kar saka. TURN relay check karein.");
+      }
     };
+    peer.oniceconnectionstatechange = () => {
+      if (peer?.iceConnectionState === "disconnected") {
+        byId("callStatusText").textContent = "Network dobara connect ho raha hai...";
+        peer.restartIce?.();
+      }
+    };
+  }
+
+  async function playRemoteMedia() {
+    const remoteAudio = byId("remoteAudio");
+    if (remoteAudio?.srcObject) {
+      remoteAudio.volume = 1;
+      remoteAudio.muted = false;
+      await remoteAudio.play();
+    }
+    const remoteVideo = byId("remoteVideo");
+    if (activeType === "video" && remoteVideo?.srcObject) {
+      await remoteVideo.play().catch(() => {});
+    }
   }
 
   async function prepareMedia(type) {
