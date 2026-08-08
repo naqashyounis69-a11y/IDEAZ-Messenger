@@ -24,6 +24,7 @@
   async function initialize(value) {
     context = value;
     context.elements.conversationList.addEventListener("click", handleConversationClick);
+    context.elements.newChatUserList?.addEventListener("click", handleNewChatUserClick);
 
     try {
       const [usersResponse, conversationsResponse] = await Promise.all([
@@ -144,9 +145,49 @@
         ? await window.IDEAZ_API.searchUsers(query)
         : await window.IDEAZ_API.users();
       context.state.users = response.data?.users || response.data || [];
+      renderUserSearchResults();
     } catch (error) {
       console.error("User search error:", error);
+      context.elements.newChatUserList.innerHTML = "";
+      context.elements.newChatEmptyState.textContent = error.message || "Users search nahi ho sake.";
+      context.elements.newChatEmptyState.classList.remove("hidden");
     }
+  }
+
+  function renderUserSearchResults() {
+    const users = context.state.users || [];
+    const list = context.elements.newChatUserList;
+    const empty = context.elements.newChatEmptyState;
+
+    if (!users.length) {
+      list.innerHTML = "";
+      empty.textContent = "Koi matching user nahi mila.";
+      empty.classList.remove("hidden");
+      return;
+    }
+
+    empty.classList.add("hidden");
+    list.innerHTML = users.map((user) => `
+      <button class="modal-user-item" type="button" data-user-id="${escapeHtml(user.id)}">
+        <span class="modal-user-avatar">${escapeHtml(initials(user))}</span>
+        <span class="modal-user-info">
+          <strong>${escapeHtml(user.fullName || user.username)}</strong>
+          <span>@${escapeHtml(user.username)}</span>
+        </span>
+      </button>
+    `).join("");
+  }
+
+  async function handleNewChatUserClick(event) {
+    const button = event.target.closest(".modal-user-item");
+    if (!button || !context) return;
+    const user = context.state.users.find((item) => item.id === button.dataset.userId);
+    if (!user) return;
+
+    context.state.newChatModalOpen = false;
+    context.elements.newChatModal.classList.add("hidden");
+    window.IDEAZ_CHAT.openConversation(context.elements, context.state, null, user);
+    await loadMessages(user.id);
   }
 
   async function receiveMessage(message) {
