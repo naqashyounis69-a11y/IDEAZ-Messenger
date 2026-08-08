@@ -172,7 +172,8 @@
     height: 100dvh;
     position: fixed;
     inset: 0;
-    z-index: 850;
+    /* Keep the active chat and composer above the fixed bottom navigation. */
+    z-index: 1100;
     display: none;
     background: var(--chat-bg);
   }
@@ -237,8 +238,9 @@
   }
 
   .chat-header-actions .icon-button {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
   }
 
   #videoCallButton {
@@ -311,7 +313,8 @@
   }
 
   .composer-icon-button {
-    width: 38px;
+    width: 42px;
+    min-width: 42px;
     height: 42px;
     border-radius: 12px;
   }
@@ -329,12 +332,28 @@
 
   .send-message-button {
     width: 44px;
+    min-width: 44px;
     height: 44px;
     border-radius: 14px;
   }
 
   #voiceRecordButton {
-    display: none;
+    display: inline-grid;
+    place-items: center;
+  }
+
+  .voice-recorder-panel {
+    width: calc(100% - 14px);
+    margin: 0 7px calc(8px + env(safe-area-inset-bottom));
+    padding: 9px;
+    gap: 8px;
+  }
+
+  .voice-recorder-panel button,
+  .modal-card button,
+  .modal-user-item {
+    min-height: 44px;
+    touch-action: manipulation;
   }
 
   .scroll-to-bottom-button {
@@ -369,6 +388,8 @@
 
   .modal-user-list {
     max-height: 58dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .toast-container {
@@ -379,6 +400,12 @@
 
   .floating-menu {
     max-width: calc(100vw - 24px);
+  }
+
+  .pwa-install-button {
+    right: 12px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    min-height: 44px;
   }
 }
 
@@ -423,7 +450,8 @@
   }
 
   .composer-icon-button {
-    width: 36px;
+    width: 38px;
+    min-width: 38px;
   }
 
   .message-input-wrapper {
