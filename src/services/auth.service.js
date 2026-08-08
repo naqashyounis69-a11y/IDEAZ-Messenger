@@ -22,6 +22,7 @@ function sanitizeUser(user) {
     avatar: user.avatar,
     about: user.about,
     allowMessagesFromAnyone: user.allowMessagesFromAnyone,
+    allowCallsFromAnyone: user.allowCallsFromAnyone,
     online: user.online,
     lastSeen: user.lastSeen,
     createdAt: user.createdAt,

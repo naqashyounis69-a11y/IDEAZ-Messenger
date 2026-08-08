@@ -32,6 +32,7 @@
     socket.on("call:answer", receiveAnswer);
     socket.on("call:ice-candidate", receiveIceCandidate);
     socket.on("call:reject", () => closeCall("Call reject ho gayi."));
+    socket.on("call:unavailable", (payload = {}) => closeCall(payload.reason || "Yeh user calls receive nahi kar raha."));
     socket.on("call:end", () => closeCall("Call end ho gayi."));
     byId("acceptCallButton")?.addEventListener("click", acceptCall);
     byId("rejectCallButton")?.addEventListener("click", rejectCall);

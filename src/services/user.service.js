@@ -18,6 +18,7 @@ function sanitizeUser(user) {
     avatar: user.avatar,
     about: user.about,
     allowMessagesFromAnyone: user.allowMessagesFromAnyone,
+    allowCallsFromAnyone: user.allowCallsFromAnyone,
     online: user.online,
     lastSeen: user.lastSeen,
     createdAt: user.createdAt,
@@ -236,7 +237,7 @@ async function updateUserPresence({
   return sanitizeUser(user);
 }
 
-async function updateProfile({ userId, fullName, about, avatar, allowMessagesFromAnyone }) {
+async function updateProfile({ userId, fullName, about, avatar, allowMessagesFromAnyone, allowCallsFromAnyone }) {
   const name = String(fullName || "").trim();
   const bio = String(about || "").trim();
   const avatarValue = avatar == null ? undefined : String(avatar).trim();
@@ -253,6 +254,7 @@ async function updateProfile({ userId, fullName, about, avatar, allowMessagesFro
       about: bio || null,
       ...(avatarValue !== undefined ? { avatar: avatarValue || null } : {}),
       ...(typeof allowMessagesFromAnyone === "boolean" ? { allowMessagesFromAnyone } : {}),
+      ...(typeof allowCallsFromAnyone === "boolean" ? { allowCallsFromAnyone } : {}),
     },
   });
   return sanitizeUser(user);

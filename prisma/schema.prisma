@@ -16,6 +16,7 @@ model User {
   avatar    String?
   about     String?   @default("Hey! I am using IDEAZ Messenger")
   allowMessagesFromAnyone Boolean @default(true)
+  allowCallsFromAnyone    Boolean @default(true)
   online    Boolean   @default(false)
   lastSeen  DateTime?
   createdAt DateTime  @default(now())

@@ -216,6 +216,7 @@
       closeSettingsModal: document.getElementById("closeSettingsModal"),
       cancelSettingsButton: document.getElementById("cancelSettingsButton"),
       settingsForm: document.getElementById("settingsForm"),
+      allowCallsToggle: document.getElementById("allowCallsToggle"),
       saveSettingsButton: document.getElementById("saveSettingsButton"),
 
       logoutButton:
@@ -1535,6 +1536,7 @@
   function openSettingsEditor(elements, state) {
     if (!state.currentUser || !elements.settingsModal) return;
     elements.allowMessagesToggle.checked = state.currentUser.allowMessagesFromAnyone !== false;
+    elements.allowCallsToggle.checked = state.currentUser.allowCallsFromAnyone !== false;
     showElement(elements.settingsModal);
   }
 
@@ -1549,6 +1551,7 @@
         about: user.about || "",
         avatar: user.avatar || null,
         allowMessagesFromAnyone: elements.allowMessagesToggle.checked,
+        allowCallsFromAnyone: elements.allowCallsToggle.checked,
       });
       state.currentUser = response.data.user;
       hideElement(elements.settingsModal);

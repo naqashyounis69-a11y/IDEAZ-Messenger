@@ -1,3 +1,5 @@
+const prisma = require("../config/prisma");
+
 function registerCallSocket(io, socket) {
   function forward(eventName, payload = {}) {
     const targetUserId = String(payload.targetUserId || "").trim();
@@ -10,7 +12,30 @@ function registerCallSocket(io, socket) {
     });
   }
 
-  socket.on("call:offer", (payload) => forward("call:offer", payload));
+  socket.on("call:offer", async (payload = {}) => {
+    const targetUserId = String(payload.targetUserId || "").trim();
+    if (!socket.userId || !targetUserId) return;
+
+    try {
+      const receiver = await prisma.user.findUnique({
+        where: { id: targetUserId },
+        select: { allowCallsFromAnyone: true },
+      });
+      if (!receiver || !receiver.allowCallsFromAnyone) {
+        socket.emit("call:unavailable", {
+          targetUserId,
+          reason: "Is user ne incoming calls band ki hui hain.",
+        });
+        return;
+      }
+      forward("call:offer", payload);
+    } catch (_error) {
+      socket.emit("call:unavailable", {
+        targetUserId,
+        reason: "Call privacy check nahi ho saka. Dobara try karein.",
+      });
+    }
+  });
   socket.on("call:answer", (payload) => forward("call:answer", payload));
   socket.on("call:ice-candidate", (payload) => forward("call:ice-candidate", payload));
   socket.on("call:reject", (payload) => forward("call:reject", payload));
