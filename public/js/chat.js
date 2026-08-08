@@ -1939,7 +1939,8 @@
 
     elements.sendMessageButton.disabled =
       !hasContent ||
-      !state.selectedConversation;
+      (!state.selectedConversation &&
+        !state.selectedUser);
 
     if (
       elements.messageCharacterCount
@@ -1973,7 +1974,8 @@
       elements.messageInput.value.trim();
 
     if (
-      !state.selectedConversation
+      !state.selectedConversation &&
+      !state.selectedUser
     ) {
       showToast(
         elements,
