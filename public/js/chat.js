@@ -612,6 +612,7 @@
         document.getElementById(
           "detailsAbout"
         ),
+      editContactNameButton: document.getElementById("editContactNameButton"),
 
       detailsVoiceCallButton:
         document.getElementById(
@@ -1123,6 +1124,19 @@
     }
 
     elements.viewSharedMediaButton?.addEventListener("click", function () { showSharedMedia(elements, state); });
+    elements.editContactNameButton?.addEventListener("click", function () {
+      if (!state.selectedUser) return;
+      const current = contactDisplayName(state.selectedUser);
+      const name = window.prompt("Is contact ka naam aapke liye kya ho?", current);
+      if (name === null) return;
+      const clean = name.trim().slice(0, 60);
+      const key = `ideaz-contact-name-${state.currentUser.id}-${state.selectedUser.id}`;
+      if (clean) localStorage.setItem(key, clean); else localStorage.removeItem(key);
+      renderActiveChatHeader(elements, state.selectedUser);
+      renderDetailsPanel(elements, state.selectedUser);
+      window.IDEAZ_CONTACTS?.renderConversations();
+      showToast(elements, clean ? `Contact name “${clean}” save ho gaya.` : "Custom contact name remove ho gaya.", "success");
+    });
     elements.muteConversationButton?.addEventListener("click", function () {
       const key = conversationSettingKey("muted", state), enabled = localStorage.getItem(key) !== "1";
       localStorage.setItem(key, enabled ? "1" : "0"); updateConversationOptionStates(elements, state);
@@ -2195,9 +2209,7 @@
 
     if (elements.detailsName) {
       elements.detailsName.textContent =
-        user.fullName ||
-        user.username ||
-        "Unknown User";
+        contactDisplayName(user);
     }
 
     if (
@@ -2855,10 +2867,7 @@
       user.username ||
       "Contact";
 
-    elements.activeChatName.textContent =
-      user.fullName ||
-      user.username ||
-      "Contact";
+    elements.activeChatName.textContent = contactDisplayName(user);
 
     elements.activeChatStatus.textContent =
       user.online
@@ -2871,6 +2880,12 @@
       elements.activeChatOnlineBadge,
       Boolean(user.online)
     );
+  }
+
+  function contactDisplayName(user) {
+    const currentId = window.IDEAZ_CHAT_STATE?.currentUser?.id;
+    const custom = currentId && user?.id ? localStorage.getItem(`ideaz-contact-name-${currentId}-${user.id}`) : "";
+    return custom || user?.fullName || user?.username || "Contact";
   }
 
   function closeMobileChat() {

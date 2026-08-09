@@ -11,6 +11,12 @@
     return conversation.otherUser || conversation.user || null;
   }
 
+  function displayName(user) {
+    const currentId = context?.state?.currentUser?.id;
+    const custom = currentId && user?.id ? localStorage.getItem(`ideaz-contact-name-${currentId}-${user.id}`) : "";
+    return custom || user?.fullName || user?.username || "Chat";
+  }
+
   function initials(user) {
     return String(user?.fullName || user?.username || "?")
       .trim()
@@ -68,7 +74,7 @@
         : `<span class="conversation-avatar conversation-initials">${escapeHtml(initials(user))}</span>`;
       return `<button class="conversation-item" type="button" data-conversation-id="${escapeHtml(conversation.id)}" data-user-id="${escapeHtml(user?.id)}">
         <span class="conversation-avatar-wrapper">${avatar}${user?.online ? '<span class="conversation-online-badge"></span>' : ""}</span>
-        <span class="conversation-content"><span class="conversation-top-row"><strong>${escapeHtml(user?.fullName || user?.username || "Chat")}</strong><time>${escapeHtml(time)}</time></span><span class="conversation-bottom-row"><small>${escapeHtml(lastMessage)}</small>${conversation.unreadCount ? `<span class="unread-badge">${conversation.unreadCount}</span>` : ""}</span></span>
+        <span class="conversation-content"><span class="conversation-top-row"><strong>${escapeHtml(displayName(user))}</strong><time>${escapeHtml(time)}</time></span><span class="conversation-bottom-row"><small>${escapeHtml(lastMessage)}</small>${conversation.unreadCount ? `<span class="unread-badge">${conversation.unreadCount}</span>` : ""}</span></span>
       </button>`;
     }).join("");
   }

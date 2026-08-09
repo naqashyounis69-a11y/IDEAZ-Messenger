@@ -2161,6 +2161,7 @@ html[data-theme="light"] audio { color-scheme: light; }
 .shared-media-modal { max-width: 720px; }
 .shared-media-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(130px,1fr)); gap: 12px; max-height: 65vh; overflow: auto; }
 .shared-media-thumb { width: 100%; height: 130px; object-fit: cover; border-radius: 12px; background: var(--surface-muted); }
+.edit-contact-name-button { margin-top: 12px; width: 100%; }
 
 .profile-editor-card { overflow-y: auto; }
 .profile-editor-form { display: grid; gap: 14px; }
