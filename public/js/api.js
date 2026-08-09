@@ -7,7 +7,17 @@
     };
     if (token) headers.Authorization = `Bearer ${token}`;
 
-    const response = await fetch(`/api${path}`, { ...options, headers });
+    let response;
+    try {
+      response = await fetch(`/api${path}`, { ...options, headers });
+    } catch (_networkError) {
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      try {
+        response = await fetch(`/api${path}`, { ...options, headers });
+      } catch (_retryError) {
+        throw new Error("Server se connection nahi ho saka. Internet check karke dobara try karein.");
+      }
+    }
     let body = {};
     try { body = await response.json(); } catch {}
 
