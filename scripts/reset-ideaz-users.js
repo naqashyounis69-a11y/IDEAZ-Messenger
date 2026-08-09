@@ -10,6 +10,34 @@ async function main() {
   ]);
 
   const result = await prisma.$transaction(async (database) => {
+    const targets = await database.user.findMany({
+      where: {
+        OR: [
+          { username: { equals: "ideaz", mode: "insensitive" } },
+          { username: { equals: "amina", mode: "insensitive" } },
+        ],
+      },
+      select: { id: true },
+    });
+    const targetIds = targets.map((user) => user.id);
+    const ownedGroups = await database.group.findMany({
+      where: { creatorId: { in: targetIds } },
+      select: { id: true },
+    });
+    const groupIds = ownedGroups.map((group) => group.id);
+    const ownedStatuses = await database.status.findMany({
+      where: { authorId: { in: targetIds } },
+      select: { id: true },
+    });
+    const statusIds = ownedStatuses.map((status) => status.id);
+
+    await database.message.deleteMany({ where: { OR: [{ senderId: { in: targetIds } }, { receiverId: { in: targetIds } }] } });
+    await database.statusView.deleteMany({ where: { OR: [{ viewerId: { in: targetIds } }, { statusId: { in: statusIds } }] } });
+    await database.status.deleteMany({ where: { id: { in: statusIds } } });
+    await database.groupMessage.deleteMany({ where: { OR: [{ senderId: { in: targetIds } }, { groupId: { in: groupIds } }] } });
+    await database.groupMember.deleteMany({ where: { OR: [{ userId: { in: targetIds } }, { groupId: { in: groupIds } }] } });
+    await database.group.deleteMany({ where: { id: { in: groupIds } } });
+
     const removed = await database.user.deleteMany({
       where: {
         OR: [
