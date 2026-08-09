@@ -29,7 +29,7 @@
 
   <link
     rel="stylesheet"
-    href="/css/chat.css?v=14"
+    href="/css/chat.css?v=15"
   >
 
   <link
@@ -192,7 +192,7 @@
             IDEAZ Messenger
           </p>
 
-          <h1 class="sidebar-title">
+          <h1 id="sidebarTitle" class="sidebar-title">
             Chats
           </h1>
         </div>
@@ -344,6 +344,14 @@
             🖥 Electron Ready
           </span>
         </div>
+      </section>
+
+      <section id="groupChatPanel" class="active-chat-panel group-workspace-panel hidden">
+        <header class="chat-header group-workspace-header">
+          <div class="chat-header-user"><button id="backToGroups" class="icon-button mobile-only" type="button">←</button><div class="group-header-avatar">👥</div><div class="chat-header-user-info"><h2 id="groupChatName"></h2><p id="groupChatMembers"></p></div></div>
+        </header>
+        <div id="groupMessages" class="message-list group-messages"></div>
+        <form id="groupMessageForm" class="message-composer group-message-form"><input id="groupMessageInput" class="message-input" maxlength="5000" placeholder="Message group" autocomplete="off"><button class="send-message-button" type="submit">➤</button></form>
       </section>
 
       <!-- Active chat -->
@@ -916,16 +924,11 @@
     <section class="modal-card groups-card">
       <header class="modal-header"><div><p class="modal-eyebrow">COMMUNITY</p><h2>Groups</h2></div><button id="closeGroupsModal" class="icon-button" type="button">×</button></header>
       <form id="createGroupForm" class="group-create-form">
+        <div class="group-create-hero"><div>👥</div><strong>Create New Group</strong><small>Select members who can chat together</small></div>
         <input id="groupNameInput" minlength="2" maxlength="80" placeholder="Group name" required>
         <div id="groupMemberChoices" class="group-member-choices"></div>
         <button id="createGroupButton" class="primary-button" type="submit">Create Group</button>
       </form>
-      <div id="groupsList" class="groups-list"></div>
-      <section id="groupChatPanel" class="group-chat-panel hidden">
-        <header><button id="backToGroups" class="icon-button" type="button">←</button><div><strong id="groupChatName"></strong><small id="groupChatMembers"></small></div></header>
-        <div id="groupMessages" class="group-messages"></div>
-        <form id="groupMessageForm" class="group-message-form"><input id="groupMessageInput" maxlength="5000" placeholder="Message group" autocomplete="off"><button class="primary-button" type="submit">➤</button></form>
-      </section>
     </section>
   </div>
 
@@ -1132,7 +1135,7 @@
   <script src="/js/uploads.js?v=8"></script>
   <script src="/js/calls.js?v=10"></script>
   <script src="/js/ui.js"></script>
-  <script src="/js/chat.js?v=17"></script>
+  <script src="/js/chat.js?v=18"></script>
   <script src="/js/pwa.js?v=2"></script>
 </body>
 </html>

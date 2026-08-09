@@ -230,6 +230,7 @@
             ".navigation-button[data-section]"
           )
         ),
+      sidebarTitle: document.getElementById("sidebarTitle"),
 
       statusModal: document.getElementById("statusModal"),
       groupsModal: document.getElementById("groupsModal"),
@@ -281,6 +282,7 @@
             ".conversation-filter"
           )
         ),
+      conversationFilterTabs: document.querySelector(".conversation-filter-tabs"),
 
       conversationList:
         document.getElementById(
@@ -678,6 +680,7 @@
             );
             if (button.dataset.section === "status") openStatusCenter(elements, state);
             if (button.dataset.section === "groups") openGroupsCenter(elements, state);
+            if (button.dataset.section === "chats") { state.currentSection = "chats"; elements.groupChatPanel.classList.add("hidden"); requestConversationRender(elements, state); }
           }
         );
       }
@@ -694,7 +697,7 @@
     elements.statusForm?.addEventListener("submit", (event) => { event.preventDefault(); postStatus(elements, state); });
     elements.closeGroupsModal?.addEventListener("click", () => hideElement(elements.groupsModal));
     elements.groupsModal?.addEventListener("click", event => { if(event.target===elements.groupsModal) hideElement(elements.groupsModal); });
-    elements.backToGroups?.addEventListener("click", () => elements.groupChatPanel.classList.add("hidden"));
+    elements.backToGroups?.addEventListener("click", () => { elements.groupChatPanel.classList.add("hidden"); showElement(elements.chatEmptyState); });
     elements.createGroupForm?.addEventListener("submit", event => { event.preventDefault(); createGroup(elements,state); });
     elements.groupMessageForm?.addEventListener("submit", event => { event.preventDefault(); sendGroupMessage(elements,state); });
 
@@ -812,10 +815,8 @@
       elements.newChatButton.addEventListener(
         "click",
         function () {
-          openNewChatModal(
-            elements,
-            state
-          );
+          if (state.currentSection === "groups") openCreateGroupModal(elements, state);
+          else openNewChatModal(elements, state);
         }
       );
     }
@@ -882,10 +883,8 @@
             Boolean(state.searchText)
           );
 
-          requestConversationRender(
-            elements,
-            state
-          );
+          if (state.currentSection === "groups") renderGroups(elements, state);
+          else requestConversationRender(elements, state);
         }
       );
     }
@@ -905,10 +904,8 @@
             elements.clearConversationSearch
           );
 
-          requestConversationRender(
-            elements,
-            state
-          );
+          if (state.currentSection === "groups") renderGroups(elements, state);
+          else requestConversationRender(elements, state);
 
           elements.conversationSearchInput.focus();
         }
@@ -920,6 +917,11 @@
         button.addEventListener(
           "click",
           function () {
+            if (button.dataset.filter === "groups") {
+              setActiveNavigation(elements, "groups");
+              openGroupsCenter(elements, state);
+              return;
+            }
             state.currentFilter =
               button.dataset.filter ||
               "all";
@@ -1680,6 +1682,11 @@
     elements,
     section
   ) {
+    if (section === "chats" || section === "groups") {
+      elements.sidebarTitle.textContent = section === "groups" ? "Groups" : "Chats";
+      elements.conversationSearchInput.placeholder = section === "groups" ? "Search groups" : "Search chats or users";
+      elements.conversationFilterTabs.classList.toggle("hidden", section === "groups");
+    }
     elements.navigationButtons.forEach(
       function (button) {
         button.classList.toggle(
@@ -1700,18 +1707,23 @@
   }
 
   async function openGroupsCenter(elements,state){
-    showElement(elements.groupsModal); elements.groupChatPanel.classList.add("hidden");
+    state.currentSection="groups"; hideElement(elements.activeChatPanel); elements.groupChatPanel.classList.add("hidden"); showElement(elements.chatEmptyState);
     try{
-      const [groupsResponse,usersResponse]=await Promise.all([window.IDEAZ_API.groups(),window.IDEAZ_API.users()]);
-      state.groups=groupsResponse.data.groups||[]; state.groupUsers=usersResponse.data.users||[];
-      elements.groupMemberChoices.innerHTML="";
-      state.groupUsers.forEach(user=>{const label=document.createElement("label"); const input=document.createElement("input"); input.type="checkbox";input.value=user.id; const span=document.createElement("span");span.textContent=user.fullName;label.append(input,span);elements.groupMemberChoices.appendChild(label);});
+      const groupsResponse=await window.IDEAZ_API.groups(); state.groups=groupsResponse.data.groups||[];
       renderGroups(elements,state);
     }catch(error){showToast(elements,error.message||"Groups load nahi ho sake.","error");}
   }
-  function renderGroups(elements,state){elements.groupsList.innerHTML="";(state.groups||[]).forEach(group=>{const button=document.createElement("button");button.type="button";button.className="group-list-item";const icon=document.createElement("span");icon.textContent="👥";const info=document.createElement("span");const name=document.createElement("strong");name.textContent=group.name;const meta=document.createElement("small");meta.textContent=`${group.members.length} members`;info.append(name,meta);button.append(icon,info);button.onclick=()=>openGroupChat(elements,state,group);elements.groupsList.appendChild(button);});if(!state.groups?.length)elements.groupsList.innerHTML='<div class="modal-empty-state">Abhi koi group nahi. Upar se banayein.</div>';}
-  async function createGroup(elements,state){const ids=[...elements.groupMemberChoices.querySelectorAll('input:checked')].map(x=>x.value);const button=elements.createGroupButton;button.disabled=true;try{await window.IDEAZ_API.createGroup({name:elements.groupNameInput.value.trim(),memberIds:ids});elements.createGroupForm.reset();showToast(elements,"Group create ho gaya.","success");await openGroupsCenter(elements,state);}catch(error){showToast(elements,error.message,"error");}finally{button.disabled=false;}}
-  async function openGroupChat(elements,state,group){state.selectedGroup=group;elements.groupChatName.textContent=group.name;elements.groupChatMembers.textContent=`${group.members.length} members`;elements.groupChatPanel.classList.remove("hidden");const response=await window.IDEAZ_API.groupMessages(group.id);state.groupMessages=response.data.messages||[];renderGroupMessages(elements,state);}
+  async function openCreateGroupModal(elements,state){
+    showElement(elements.groupsModal);
+    try{
+      const usersResponse=await window.IDEAZ_API.users(); state.groupUsers=usersResponse.data.users||[];
+      elements.groupMemberChoices.innerHTML="";
+      state.groupUsers.forEach(user=>{const label=document.createElement("label"); const input=document.createElement("input"); input.type="checkbox";input.value=user.id; const span=document.createElement("span");span.textContent=user.fullName;label.append(input,span);elements.groupMemberChoices.appendChild(label);});
+    }catch(error){showToast(elements,error.message||"Members load nahi ho sake.","error");}
+  }
+  function renderGroups(elements,state){elements.conversationListState.classList.add("hidden");elements.conversationList.innerHTML="";const query=state.searchText||"";(state.groups||[]).filter(group=>group.name.toLowerCase().includes(query)).forEach(group=>{const button=document.createElement("button");button.type="button";button.className="conversation-item group-list-item";const icon=document.createElement("span");icon.className="group-sidebar-avatar";icon.textContent="👥";const info=document.createElement("span");const name=document.createElement("strong");name.textContent=group.name;const meta=document.createElement("small");meta.textContent=group.messages?.[0]?.text||`${group.members.length} members`;info.append(name,meta);button.append(icon,info);button.onclick=()=>openGroupChat(elements,state,group);elements.conversationList.appendChild(button);});if(!elements.conversationList.children.length)renderEmptyConversationState(elements,query?"Koi matching group nahi mila.":"Abhi koi group nahi. + se banayein.");}
+  async function createGroup(elements,state){const ids=[...elements.groupMemberChoices.querySelectorAll('input:checked')].map(x=>x.value);const button=elements.createGroupButton;button.disabled=true;try{await window.IDEAZ_API.createGroup({name:elements.groupNameInput.value.trim(),memberIds:ids});elements.createGroupForm.reset();hideElement(elements.groupsModal);showToast(elements,"Group create ho gaya.","success");await openGroupsCenter(elements,state);}catch(error){showToast(elements,error.message,"error");}finally{button.disabled=false;}}
+  async function openGroupChat(elements,state,group){state.selectedGroup=group;hideElement(elements.chatEmptyState);hideElement(elements.activeChatPanel);elements.groupChatName.textContent=group.name;elements.groupChatMembers.textContent=`${group.members.length} members`;elements.groupChatPanel.classList.remove("hidden");const response=await window.IDEAZ_API.groupMessages(group.id);state.groupMessages=response.data.messages||[];renderGroupMessages(elements,state);}
   function renderGroupMessages(elements,state){elements.groupMessages.innerHTML="";(state.groupMessages||[]).forEach(message=>{const row=document.createElement("div");row.className=`group-message ${message.senderId===state.currentUser.id?"mine":""}`;const sender=document.createElement("strong");sender.textContent=message.sender?.fullName||"Member";const text=document.createElement("span");text.textContent=message.text||"Attachment";row.append(sender,text);elements.groupMessages.appendChild(row);});elements.groupMessages.scrollTop=elements.groupMessages.scrollHeight;}
   async function sendGroupMessage(elements,state){const text=elements.groupMessageInput.value.trim();if(!text||!state.selectedGroup)return;try{const response=await window.IDEAZ_API.sendGroupMessage(state.selectedGroup.id,{text});elements.groupMessageInput.value="";const message=response.data.message;if(!state.groupMessages.some(x=>x.id===message.id)){state.groupMessages.push(message);renderGroupMessages(elements,state);}}catch(error){showToast(elements,error.message,"error");}}
 
