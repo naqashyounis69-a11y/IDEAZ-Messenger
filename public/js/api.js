@@ -45,6 +45,8 @@
     createGroup: (data) => request("/groups", { method: "POST", body: JSON.stringify(data) }),
     groupMessages: (id) => request(`/groups/${id}/messages`),
     sendGroupMessage: (id, data) => request(`/groups/${id}/messages`, { method: "POST", body: JSON.stringify(data) }),
+    updateGroup: (id, data) => request(`/groups/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    deleteGroup: (id) => request(`/groups/${id}`, { method: "DELETE" }),
     upload: (file) => {
       const form = new FormData();
       form.append("file", file);

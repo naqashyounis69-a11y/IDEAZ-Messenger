@@ -33,4 +33,20 @@ router.post("/:groupId/messages", async(req,res,next)=>{try{
   const members=await prisma.groupMember.findMany({where:{groupId:req.params.groupId},select:{userId:true}}); const io=req.app.get("io"); members.forEach(({userId})=>io?.to(`user:${userId}`).emit("group-message",message));
   res.status(201).json({success:true,data:{message}});
 }catch(e){next(e);} });
+
+router.patch("/:groupId", async(req,res,next)=>{try{
+  const member=await membership(req.params.groupId,req.user.id);
+  if(!member?.isAdmin) return res.status(403).json({success:false,message:"Sirf group admin edit kar sakta hai."});
+  const data={};
+  if(req.body.name!==undefined){const name=String(req.body.name||"").trim();if(name.length<2||name.length>80)return res.status(400).json({success:false,message:"Group name 2 se 80 characters honi chahiye."});data.name=name;}
+  if(req.body.avatar!==undefined)data.avatar=req.body.avatar?String(req.body.avatar):null;
+  const group=await prisma.group.update({where:{id:req.params.groupId},data,include:{members:{include:{user:{select:userSelect}}},messages:{take:1,orderBy:{createdAt:"desc"},include:{sender:{select:userSelect}}}}});
+  res.json({success:true,message:"Group update ho gaya.",data:{group}});
+}catch(e){next(e);} });
+
+router.delete("/:groupId", async(req,res,next)=>{try{
+  const member=await membership(req.params.groupId,req.user.id);
+  if(!member?.isAdmin)return res.status(403).json({success:false,message:"Sirf group admin delete kar sakta hai."});
+  await prisma.group.delete({where:{id:req.params.groupId}});res.json({success:true,message:"Group delete ho gaya."});
+}catch(e){next(e);} });
 module.exports=router;
