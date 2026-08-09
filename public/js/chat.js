@@ -43,6 +43,8 @@
       profileMenuOpen: false,
       newChatModalOpen: false,
       messageSearchOpen: false,
+      messageSearchResults: [],
+      messageSearchIndex: -1,
       replyingToMessage: null,
       selectedAttachment: null,
       selectedAttachments: [],
@@ -348,6 +350,8 @@
         document.getElementById(
           "sidebarMenuButton"
         ),
+      sidebarActionsMenu: document.getElementById("sidebarActionsMenu"),
+      chatActionsMenu: document.getElementById("chatActionsMenu"),
 
       chatEmptyState:
         document.getElementById(
@@ -453,6 +457,7 @@
         document.getElementById(
           "loadOlderMessagesButton"
         ),
+      loadOlderMessagesWrapper: document.getElementById("loadOlderMessagesWrapper"),
 
       scrollToBottomButton:
         document.getElementById(
@@ -974,15 +979,27 @@
     ) {
       elements.sidebarMenuButton.addEventListener(
         "click",
-        function () {
-          showToast(
-            elements,
-            "Chat menu options next phase mein add hongi.",
-            "warning"
-          );
+        function (event) {
+          event.stopPropagation();
+          toggleActionMenu(elements.sidebarActionsMenu, elements.sidebarMenuButton);
         }
       );
     }
+
+    elements.sidebarActionsMenu?.addEventListener("click", async function (event) {
+      const action = event.target.closest("button")?.dataset.sidebarAction;
+      if (!action) return;
+      hideElement(elements.sidebarActionsMenu);
+      if (action === "new-chat") openNewChatModal(elements, state);
+      if (action === "new-group") { setActiveNavigation(elements, "groups"); openGroupsCenter(elements, state); }
+      if (action === "settings") openSettingsEditor(elements, state);
+      if (action === "refresh") {
+        const response = await window.IDEAZ_API.conversations();
+        state.conversations = response.data?.conversations || [];
+        window.IDEAZ_CONTACTS?.renderConversations();
+        showToast(elements, "Chats refresh ho gayi hain.", "success");
+      }
+    });
 
     if (
       elements.mobileBackButton
@@ -1133,13 +1150,7 @@
     ) {
       elements.previousSearchResult.addEventListener(
         "click",
-        function () {
-          showToast(
-            elements,
-            "Previous search navigation next message module mein active hogi.",
-            "warning"
-          );
-        }
+        function () { navigateMessageSearch(elements, state, -1); }
       );
     }
 
@@ -1148,28 +1159,35 @@
     ) {
       elements.nextSearchResult.addEventListener(
         "click",
-        function () {
-          showToast(
-            elements,
-            "Next search navigation next message module mein active hogi.",
-            "warning"
-          );
-        }
+        function () { navigateMessageSearch(elements, state, 1); }
       );
     }
 
     if (elements.chatMenuButton) {
       elements.chatMenuButton.addEventListener(
         "click",
-        function () {
-          showToast(
-            elements,
-            "Chat menu next phase mein add hoga.",
-            "warning"
-          );
+        function (event) {
+          event.stopPropagation();
+          toggleActionMenu(elements.chatActionsMenu, elements.chatMenuButton);
         }
       );
     }
+
+    elements.chatActionsMenu?.addEventListener("click", function (event) {
+      const action = event.target.closest("button")?.dataset.chatAction;
+      if (!action) return;
+      hideElement(elements.chatActionsMenu);
+      if (action === "contact") toggleDetailsPanel(elements, state, true);
+      if (action === "search") toggleMessageSearch(elements, state, true);
+      if (action === "mute") {
+        const key = `ideaz-muted-${state.selectedUser?.id || "chat"}`;
+        const muted = localStorage.getItem(key) !== "1";
+        localStorage.setItem(key, muted ? "1" : "0");
+        event.target.textContent = muted ? "Unmute notifications" : "Mute notifications";
+        showToast(elements, muted ? "Notifications mute kar di gayi hain." : "Notifications unmute ho gayi hain.", "success");
+      }
+      if (action === "close") closeMobileChat();
+    });
 
     if (elements.messageInput) {
       elements.messageInput.addEventListener(
@@ -1338,12 +1356,9 @@
     ) {
       elements.loadOlderMessagesButton.addEventListener(
         "click",
-        function () {
-          showToast(
-            elements,
-            "Older messages API next phase mein connect hogi.",
-            "warning"
-          );
+        async function () {
+          try { await window.IDEAZ_CONTACTS?.loadOlderMessages(); }
+          catch (error) { showToast(elements, error.message, "error"); }
         }
       );
     }
@@ -1361,6 +1376,8 @@
         hideElement(
           elements.messageContextMenu
         );
+        hideElement(elements.sidebarActionsMenu);
+        hideElement(elements.chatActionsMenu);
       }
     );
 
@@ -1722,13 +1739,6 @@
       }
     );
 
-    if (section !== "chats" && section !== "status" && section !== "groups") {
-      showToast(
-        elements,
-        `${capitalize(section)} module next phase mein active hoga.`,
-        "warning"
-      );
-    }
   }
 
   function hideWorkspaceModules(elements){hideElement(elements.chatEmptyState);hideElement(elements.activeChatPanel);hideElement(elements.groupChatPanel);hideElement(elements.callsModulePanel);hideElement(elements.statusModulePanel);hideElement(elements.detailsPanel);}
@@ -2207,6 +2217,7 @@
     ) {
       elements.messageSearchInput.value =
         "";
+      clearMessageSearchHighlights(elements, state);
 
       if (
         elements.messageSearchCount
@@ -2234,21 +2245,49 @@
       return;
     }
 
-    const count =
-      state.messages.filter(
-        function (message) {
-          return String(
-            message.text || ""
-          )
-            .toLowerCase()
-            .includes(query);
-        }
-      ).length;
+    clearMessageSearchHighlights(elements, state);
+    state.messageSearchResults = [...elements.messagesList.querySelectorAll(".message-row")].filter(function (row) {
+      return row.textContent.toLowerCase().includes(query);
+    });
+    state.messageSearchResults.forEach((row) => row.classList.add("search-match"));
+    if (state.messageSearchResults.length) {
+      state.messageSearchIndex = state.messageSearchResults.length - 1;
+      focusMessageSearchResult(elements, state);
+    } else {
+      elements.messageSearchCount.textContent = "0 results";
+    }
+  }
 
-    elements.messageSearchCount.textContent =
-      `${count} result${
-        count === 1 ? "" : "s"
-      }`;
+  function clearMessageSearchHighlights(elements, state) {
+    elements.messagesList?.querySelectorAll(".search-match, .search-current").forEach((row) => row.classList.remove("search-match", "search-current"));
+    state.messageSearchResults = [];
+    state.messageSearchIndex = -1;
+  }
+
+  function focusMessageSearchResult(elements, state) {
+    state.messageSearchResults.forEach((row) => row.classList.remove("search-current"));
+    const current = state.messageSearchResults[state.messageSearchIndex];
+    if (!current) return;
+    current.classList.add("search-current");
+    current.scrollIntoView({ behavior: "smooth", block: "center" });
+    elements.messageSearchCount.textContent = `${state.messageSearchIndex + 1} of ${state.messageSearchResults.length}`;
+  }
+
+  function navigateMessageSearch(elements, state, direction) {
+    if (!state.messageSearchResults.length) return;
+    state.messageSearchIndex = (state.messageSearchIndex + direction + state.messageSearchResults.length) % state.messageSearchResults.length;
+    focusMessageSearchResult(elements, state);
+  }
+
+  function toggleActionMenu(menu, anchor) {
+    if (!menu || !anchor) return;
+    const opening = menu.classList.contains("hidden");
+    hideElement(menu);
+    if (!opening) return;
+    const rect = anchor.getBoundingClientRect();
+    menu.style.left = `${Math.max(8, Math.min(window.innerWidth - 210, rect.right - 190))}px`;
+    menu.style.top = `${rect.bottom + 8}px`;
+    showElement(menu);
   }
 
   function handleMessageInput(
@@ -2659,17 +2698,6 @@
       });
     }
     picker.classList.toggle("hidden");
-  }
-
-  function showCallPlaceholder(
-    elements,
-    callType
-  ) {
-    showToast(
-      elements,
-      `${callType} feature WebRTC phase mein add hoga.`,
-      "warning"
-    );
   }
 
   function setSocketStatus(

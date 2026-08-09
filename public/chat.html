@@ -29,7 +29,7 @@
 
   <link
     rel="stylesheet"
-    href="/css/chat.css?v=21"
+    href="/css/chat.css?v=22"
   >
 
   <link
@@ -941,6 +941,22 @@
     <input id="groupPhotoInput" class="hidden" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
   </div>
 
+  <div id="sidebarActionsMenu" class="floating-menu hidden">
+    <button type="button" data-sidebar-action="new-chat">New chat</button>
+    <button type="button" data-sidebar-action="new-group">New group</button>
+    <button type="button" data-sidebar-action="settings">Settings</button>
+    <div class="floating-menu-divider"></div>
+    <button type="button" data-sidebar-action="refresh">Refresh chats</button>
+  </div>
+
+  <div id="chatActionsMenu" class="floating-menu hidden">
+    <button type="button" data-chat-action="contact">Contact info</button>
+    <button type="button" data-chat-action="search">Search messages</button>
+    <button type="button" data-chat-action="mute">Mute notifications</button>
+    <div class="floating-menu-divider"></div>
+    <button type="button" data-chat-action="close">Close chat</button>
+  </div>
+
   <!-- Groups center -->
   <div id="groupsModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
     <section class="modal-card groups-card">
@@ -1146,18 +1162,18 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/config.js"></script>
   <script src="/js/storage.js"></script>
-  <script src="/js/api.js?v=12"></script>
+  <script src="/js/api.js?v=13"></script>
   <script src="/js/socket.js?v=6"></script>
   <script src="/js/chat.socket.js?v=7"></script>
   <script src="/js/typing.js"></script>
   <script src="/js/notifications.js"></script>
-  <script src="/js/contact.js?v=10"></script>
+  <script src="/js/contact.js?v=11"></script>
   <script src="/js/conversation.js?v=6"></script>
   <script src="/js/messages.js"></script>
   <script src="/js/uploads.js?v=8"></script>
   <script src="/js/calls.js?v=10"></script>
   <script src="/js/ui.js"></script>
-  <script src="/js/chat.js?v=21"></script>
+  <script src="/js/chat.js?v=22"></script>
   <script src="/js/pwa.js?v=2"></script>
 </body>
 </html>

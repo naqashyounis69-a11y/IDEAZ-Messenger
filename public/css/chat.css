@@ -2153,6 +2153,12 @@ html[data-theme="light"] audio { color-scheme: light; }
   }
 }
 
+.message-row.search-match .message-bubble { outline: 2px solid rgba(250, 204, 21, 0.55); }
+.message-row.search-current .message-bubble {
+  outline: 3px solid #facc15;
+  box-shadow: 0 0 0 5px rgba(250, 204, 21, 0.2);
+}
+
 .profile-editor-card { overflow-y: auto; }
 .profile-editor-form { display: grid; gap: 14px; }
 .profile-editor-form > label:not(.profile-photo-picker) { display: grid; gap: 7px; color: var(--text-secondary); font-size: 12px; font-weight: 700; }

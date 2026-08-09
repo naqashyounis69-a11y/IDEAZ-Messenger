@@ -44,7 +44,13 @@
     searchUsers: (query) => request(`/users/search?q=${encodeURIComponent(query)}`),
     updateProfile: (data) => request("/users/me", { method: "PATCH", body: JSON.stringify(data) }),
     conversations: () => request("/messages/conversations"),
-    messages: (id) => request(`/messages/user/${id}`),
+    messages: (id, options = {}) => {
+      const query = new URLSearchParams();
+      if (options.limit) query.set("limit", options.limit);
+      if (options.before) query.set("before", options.before);
+      const suffix = query.toString() ? `?${query}` : "";
+      return request(`/messages/user/${id}${suffix}`);
+    },
     sendMessage: (data) => request("/messages", { method: "POST", body: JSON.stringify(data) }),
     markSeen: (id) => request(`/messages/user/${id}/seen`, { method: "PATCH" }),
     statuses: () => request("/statuses"),

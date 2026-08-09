@@ -104,10 +104,11 @@
     list.innerHTML = '<div class="message-date-divider">Messages load ho rahe hain...</div>';
 
     try {
-      const response = await window.IDEAZ_API.messages(userId);
+      const response = await window.IDEAZ_API.messages(userId, { limit: 100 });
       const messages = response.data?.messages || [];
       context.state.messages = messages;
       renderMessages(messages);
+      context.elements.loadOlderMessagesWrapper?.classList.toggle("hidden", messages.length < 100);
       window.IDEAZ_API.markSeen(userId).catch(() => {});
     } catch (error) {
       list.innerHTML = `<div class="message-date-divider">${escapeHtml(error.message)}</div>`;
@@ -144,6 +145,28 @@
     }).join("");
 
     window.IDEAZ_CHAT.scrollMessagesToBottom(context.elements);
+  }
+
+  async function loadOlderMessages() {
+    if (!context?.state.selectedUser || !context.state.messages.length) return;
+    const button = context.elements.loadOlderMessagesButton;
+    const oldest = context.state.messages[0];
+    const viewport = context.elements.messagesViewport;
+    const oldHeight = viewport.scrollHeight;
+    button.disabled = true;
+    button.textContent = "Loading...";
+    try {
+      const response = await window.IDEAZ_API.messages(context.state.selectedUser.id, { limit: 100, before: oldest.createdAt });
+      const older = response.data?.messages || [];
+      const known = new Set(context.state.messages.map((message) => message.id));
+      context.state.messages = [...older.filter((message) => !known.has(message.id)), ...context.state.messages];
+      renderMessages(context.state.messages);
+      viewport.scrollTop = viewport.scrollHeight - oldHeight;
+      context.elements.loadOlderMessagesWrapper?.classList.toggle("hidden", older.length < 100);
+    } finally {
+      button.disabled = false;
+      button.textContent = "Older messages load karein";
+    }
   }
 
   async function searchUsers(query) {
@@ -224,6 +247,7 @@
     renderConversations,
     renderMessages,
     loadMessages,
+    loadOlderMessages,
     receiveMessage,
     searchUsers,
   };
