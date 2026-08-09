@@ -62,8 +62,11 @@
         ? new Date(conversation.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
         : "";
 
+      const avatar = user?.avatar
+        ? `<img class="conversation-avatar" src="${escapeHtml(user.avatar)}" alt="${escapeHtml(user.fullName || user.username || "User")}" loading="lazy">`
+        : `<span class="conversation-avatar conversation-initials">${escapeHtml(initials(user))}</span>`;
       return `<button class="conversation-item" type="button" data-conversation-id="${escapeHtml(conversation.id)}" data-user-id="${escapeHtml(user?.id)}">
-        <span class="conversation-avatar-wrapper"><span class="conversation-avatar conversation-initials">${escapeHtml(initials(user))}</span>${user?.online ? '<span class="conversation-online-badge"></span>' : ""}</span>
+        <span class="conversation-avatar-wrapper">${avatar}${user?.online ? '<span class="conversation-online-badge"></span>' : ""}</span>
         <span class="conversation-content"><span class="conversation-top-row"><strong>${escapeHtml(user?.fullName || user?.username || "Chat")}</strong><time>${escapeHtml(time)}</time></span><span class="conversation-bottom-row"><small>${escapeHtml(lastMessage)}</small>${conversation.unreadCount ? `<span class="unread-badge">${conversation.unreadCount}</span>` : ""}</span></span>
       </button>`;
     }).join("");
@@ -173,7 +176,7 @@
     empty.classList.add("hidden");
     list.innerHTML = users.map((user) => `
       <button class="modal-user-item" type="button" data-user-id="${escapeHtml(user.id)}">
-        <span class="modal-user-avatar">${escapeHtml(initials(user))}</span>
+        ${user.avatar ? `<img class="modal-user-avatar" src="${escapeHtml(user.avatar)}" alt="${escapeHtml(user.fullName || user.username)}" loading="lazy">` : `<span class="modal-user-avatar conversation-initials">${escapeHtml(initials(user))}</span>`}
         <span class="modal-user-info">
           <strong>${escapeHtml(user.fullName || user.username)}</strong>
           <span>@${escapeHtml(user.username)}</span>
