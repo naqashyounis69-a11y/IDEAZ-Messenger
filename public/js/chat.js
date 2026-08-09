@@ -253,6 +253,15 @@
       changeGroupPhotoButton: document.getElementById("changeGroupPhotoButton"),
       deleteGroupButton: document.getElementById("deleteGroupButton"),
       groupPhotoInput: document.getElementById("groupPhotoInput"),
+      callsModulePanel: document.getElementById("callsModulePanel"),
+      callContactSearch: document.getElementById("callContactSearch"),
+      callContactsList: document.getElementById("callContactsList"),
+      newCallButton: document.getElementById("newCallButton"),
+      statusModulePanel: document.getElementById("statusModulePanel"),
+      addStatusButton: document.getElementById("addStatusButton"),
+      myStatusCard: document.getElementById("myStatusCard"),
+      myStatusAvatar: document.getElementById("myStatusAvatar"),
+      statusOverviewList: document.getElementById("statusOverviewList"),
       closeStatusModal: document.getElementById("closeStatusModal"),
       statusForm: document.getElementById("statusForm"),
       statusTextInput: document.getElementById("statusTextInput"),
@@ -684,9 +693,10 @@
               elements,
               button.dataset.section
             );
-            if (button.dataset.section === "status") openStatusCenter(elements, state);
+            if (button.dataset.section === "status") openStatusModule(elements, state);
             if (button.dataset.section === "groups") openGroupsCenter(elements, state);
-            if (button.dataset.section === "chats") { state.currentSection = "chats"; elements.groupChatPanel.classList.add("hidden"); requestConversationRender(elements, state); }
+            if (button.dataset.section === "calls") openCallsModule(elements, state);
+            if (button.dataset.section === "chats") { state.currentSection = "chats"; hideElement(elements.callsModulePanel);hideElement(elements.statusModulePanel);elements.groupChatPanel.classList.add("hidden");showElement(elements.chatEmptyState);requestConversationRender(elements, state); }
           }
         );
       }
@@ -710,6 +720,10 @@
     elements.changeGroupPhotoButton?.addEventListener("click", () => elements.groupPhotoInput.click());
     elements.deleteGroupButton?.addEventListener("click", () => deleteGroup(elements,state));
     elements.groupPhotoInput?.addEventListener("change", () => changeGroupPhoto(elements,state));
+    elements.callContactSearch?.addEventListener("input", () => renderCallContacts(elements,state));
+    elements.newCallButton?.addEventListener("click", () => elements.callContactSearch.focus());
+    elements.addStatusButton?.addEventListener("click", () => openStatusCenter(elements,state));
+    elements.myStatusCard?.addEventListener("click", () => openStatusCenter(elements,state));
     document.addEventListener("click", event => { if(!event.target.closest("#groupContextMenu")) hideElement(elements.groupContextMenu); });
 
     if (
@@ -1693,10 +1707,10 @@
     elements,
     section
   ) {
-    if (section === "chats" || section === "groups") {
-      elements.sidebarTitle.textContent = section === "groups" ? "Groups" : "Chats";
-      elements.conversationSearchInput.placeholder = section === "groups" ? "Search groups" : "Search chats or users";
-      elements.conversationFilterTabs.classList.toggle("hidden", section === "groups");
+    if (["chats","groups","calls","status"].includes(section)) {
+      elements.sidebarTitle.textContent = ({chats:"Chats",groups:"Groups",calls:"Calls",status:"Status"})[section];
+      elements.conversationSearchInput.placeholder = section === "groups" ? "Search groups" : section === "chats" ? "Search chats or users" : `Open ${section} module`;
+      elements.conversationFilterTabs.classList.toggle("hidden", section !== "chats");
     }
     elements.navigationButtons.forEach(
       function (button) {
@@ -1717,8 +1731,15 @@
     }
   }
 
+  function hideWorkspaceModules(elements){hideElement(elements.chatEmptyState);hideElement(elements.activeChatPanel);hideElement(elements.groupChatPanel);hideElement(elements.callsModulePanel);hideElement(elements.statusModulePanel);hideElement(elements.detailsPanel);}
+  async function openCallsModule(elements,state){state.currentSection="calls";hideWorkspaceModules(elements);showElement(elements.callsModulePanel);elements.conversationList.innerHTML="";renderEmptyConversationState(elements,"Right side se contact ko call karein.");try{const response=await window.IDEAZ_API.users();state.callUsers=response.data.users||[];renderCallContacts(elements,state);}catch(error){elements.callContactsList.innerHTML=`<div class="modal-empty-state">${error.message}</div>`;}}
+  function renderCallContacts(elements,state){const query=(elements.callContactSearch.value||"").trim().toLowerCase();elements.callContactsList.innerHTML="";(state.callUsers||[]).filter(user=>(user.fullName+" "+user.username).toLowerCase().includes(query)).forEach(user=>{const row=document.createElement("article");row.className="call-contact-card";const avatar=document.createElement("img");avatar.src=user.avatar||"/assets/default-avatar.svg";avatar.alt="";const info=document.createElement("div");const name=document.createElement("strong");name.textContent=user.fullName;const status=document.createElement("small");status.textContent=user.online?"Online":`@${user.username}`;info.append(name,status);const voice=document.createElement("button");voice.type="button";voice.title="Voice call";voice.textContent="📞";voice.onclick=()=>startModuleCall(elements,state,user,"voice");const video=document.createElement("button");video.type="button";video.title="Video call";video.textContent="🎥";video.onclick=()=>startModuleCall(elements,state,user,"video");row.append(avatar,info,video,voice);elements.callContactsList.appendChild(row);});}
+  function startModuleCall(elements,state,user,type){state.selectedUser=user;window.IDEAZ_CALLS?.startCall(type);}
+  async function openStatusModule(elements,state){state.currentSection="status";hideWorkspaceModules(elements);showElement(elements.statusModulePanel);elements.conversationList.innerHTML="";renderEmptyConversationState(elements,"Right side par status updates hain.");elements.myStatusAvatar.src=state.currentUser.avatar||"/assets/default-avatar.svg";elements.statusOverviewList.innerHTML='<div class="modal-empty-state">Updates load ho rahi hain...</div>';try{const response=await window.IDEAZ_API.statuses();state.statuses=response.data.statuses||[];renderStatusOverview(elements,state);}catch(error){elements.statusOverviewList.innerHTML=`<div class="modal-empty-state">${error.message}</div>`;}}
+  function renderStatusOverview(elements,state){elements.statusOverviewList.innerHTML="";const statuses=(state.statuses||[]).filter(s=>s.author.id!==state.currentUser.id);statuses.forEach(status=>{const button=document.createElement("button");button.type="button";button.className=`status-overview-card${status.viewed?" viewed":""}`;const avatar=document.createElement("img");avatar.src=status.author.avatar||"/assets/default-avatar.svg";avatar.alt="";const info=document.createElement("span");const name=document.createElement("strong");name.textContent=status.author.fullName;const time=document.createElement("small");time.textContent=new Date(status.createdAt).toLocaleString();info.append(name,time);button.append(avatar,info);button.onclick=()=>viewStatus(elements,state,status);elements.statusOverviewList.appendChild(button);});if(!statuses.length)elements.statusOverviewList.innerHTML='<div class="module-empty"><span>◉</span><strong>No recent updates</strong><small>Contacts ke status yahan nazar aayenge.</small></div>';}
+
   async function openGroupsCenter(elements,state){
-    state.currentSection="groups"; hideElement(elements.activeChatPanel); elements.groupChatPanel.classList.add("hidden"); showElement(elements.chatEmptyState);
+    state.currentSection="groups"; hideWorkspaceModules(elements); showElement(elements.chatEmptyState);
     try{
       const groupsResponse=await window.IDEAZ_API.groups(); state.groups=groupsResponse.data.groups||[];
       renderGroups(elements,state);
@@ -1734,7 +1755,7 @@
   }
   function renderGroups(elements,state){elements.conversationListState.classList.add("hidden");elements.conversationList.innerHTML="";const query=state.searchText||"";(state.groups||[]).filter(group=>group.name.toLowerCase().includes(query)).forEach(group=>{const button=document.createElement("button");button.type="button";button.className="conversation-item group-list-item";const icon=document.createElement(group.avatar?"img":"span");icon.className="group-sidebar-avatar";if(group.avatar){icon.src=group.avatar;icon.alt="";}else icon.textContent="👥";const info=document.createElement("span");const name=document.createElement("strong");name.textContent=group.name;const meta=document.createElement("small");meta.textContent=group.messages?.[0]?.text||`${group.members.length} members`;info.append(name,meta);button.append(icon,info);button.onclick=()=>openGroupChat(elements,state,group);button.addEventListener("contextmenu",event=>{event.preventDefault();openGroupContextMenu(elements,state,group,event.clientX,event.clientY);});elements.conversationList.appendChild(button);});if(!elements.conversationList.children.length)renderEmptyConversationState(elements,query?"Koi matching group nahi mila.":"Abhi koi group nahi. + se banayein.");}
   async function createGroup(elements,state){const ids=[...elements.groupMemberChoices.querySelectorAll('input:checked')].map(x=>x.value);const button=elements.createGroupButton;button.disabled=true;try{await window.IDEAZ_API.createGroup({name:elements.groupNameInput.value.trim(),memberIds:ids});elements.createGroupForm.reset();hideElement(elements.groupsModal);showToast(elements,"Group create ho gaya.","success");await openGroupsCenter(elements,state);}catch(error){showToast(elements,error.message,"error");}finally{button.disabled=false;}}
-  async function openGroupChat(elements,state,group){state.selectedGroup=group;hideElement(elements.chatEmptyState);hideElement(elements.activeChatPanel);hideElement(elements.detailsPanel);elements.groupChatName.textContent=group.name;elements.groupChatAvatar.src=group.avatar||"/assets/default-avatar.svg";elements.groupChatMembers.textContent=`${group.members.length} members`;elements.groupChatPanel.classList.remove("hidden");const response=await window.IDEAZ_API.groupMessages(group.id);state.groupMessages=response.data.messages||[];renderGroupMessages(elements,state);}
+  async function openGroupChat(elements,state,group){state.selectedGroup=group;hideWorkspaceModules(elements);elements.groupChatName.textContent=group.name;elements.groupChatAvatar.src=group.avatar||"/assets/default-avatar.svg";elements.groupChatMembers.textContent=`${group.members.length} members`;elements.groupChatPanel.classList.remove("hidden");const response=await window.IDEAZ_API.groupMessages(group.id);state.groupMessages=response.data.messages||[];renderGroupMessages(elements,state);}
   function renderGroupMessages(elements,state){elements.groupMessages.innerHTML="";(state.groupMessages||[]).forEach(message=>{const row=document.createElement("div");row.className=`group-message ${message.senderId===state.currentUser.id?"mine":""}`;const sender=document.createElement("strong");sender.textContent=message.sender?.fullName||"Member";const text=document.createElement("span");text.textContent=message.text||"Attachment";row.append(sender,text);elements.groupMessages.appendChild(row);});elements.groupMessages.scrollTop=elements.groupMessages.scrollHeight;}
   async function sendGroupMessage(elements,state){const text=elements.groupMessageInput.value.trim();if(!text||!state.selectedGroup)return;try{const response=await window.IDEAZ_API.sendGroupMessage(state.selectedGroup.id,{text});elements.groupMessageInput.value="";const message=response.data.message;if(!state.groupMessages.some(x=>x.id===message.id)){state.groupMessages.push(message);renderGroupMessages(elements,state);}}catch(error){showToast(elements,error.message,"error");}}
   function openGroupContextMenu(elements,state,group,x,y){const admin=group.members?.some(member=>member.userId===state.currentUser.id&&member.isAdmin);if(!admin)return showToast(elements,"Sirf group admin edit kar sakta hai.","warning");state.contextGroup=group;elements.groupContextMenu.style.left=`${Math.min(x,innerWidth-230)}px`;elements.groupContextMenu.style.top=`${Math.min(y,innerHeight-190)}px`;showElement(elements.groupContextMenu);}
@@ -2677,6 +2698,9 @@
     conversation,
     user
   ) {
+    hideElement(elements.callsModulePanel);
+    hideElement(elements.statusModulePanel);
+    hideElement(elements.groupChatPanel);
     state.selectedConversation =
       conversation;
 

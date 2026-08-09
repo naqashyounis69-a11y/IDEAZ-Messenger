@@ -29,7 +29,7 @@
 
   <link
     rel="stylesheet"
-    href="/css/chat.css?v=19"
+    href="/css/chat.css?v=20"
   >
 
   <link
@@ -344,6 +344,20 @@
             🖥 Electron Ready
           </span>
         </div>
+      </section>
+
+      <section id="callsModulePanel" class="module-workspace calls-module hidden">
+        <header class="module-header"><div><p>CONNECT</p><h2>Calls</h2></div><button id="newCallButton" class="module-round-button" type="button" title="New call">📞＋</button></header>
+        <div class="module-search"><span>🔍</span><input id="callContactSearch" type="search" placeholder="Search name or username"></div>
+        <div class="module-section-title"><div><strong>People</strong><small>Voice and video calls</small></div></div>
+        <div id="callContactsList" class="call-contacts-list"></div>
+      </section>
+
+      <section id="statusModulePanel" class="module-workspace status-module hidden">
+        <header class="module-header"><div><p>UPDATES</p><h2>Status</h2></div><button id="addStatusButton" class="module-round-button" type="button" title="Add status">＋</button></header>
+        <button id="myStatusCard" class="my-status-card" type="button"><span class="my-status-avatar-wrap"><img id="myStatusAvatar" src="/assets/default-avatar.svg" alt="My status"><b>＋</b></span><span><strong>My status</strong><small>Click to add a 24-hour update</small></span></button>
+        <div class="module-section-title"><div><strong>Recent updates</strong><small>Photos and text from your contacts</small></div></div>
+        <div id="statusOverviewList" class="status-overview-list"></div>
       </section>
 
       <section id="groupChatPanel" class="active-chat-panel group-workspace-panel hidden">
@@ -1143,7 +1157,7 @@
   <script src="/js/uploads.js?v=8"></script>
   <script src="/js/calls.js?v=10"></script>
   <script src="/js/ui.js"></script>
-  <script src="/js/chat.js?v=19"></script>
+  <script src="/js/chat.js?v=20"></script>
   <script src="/js/pwa.js?v=2"></script>
 </body>
 </html>
