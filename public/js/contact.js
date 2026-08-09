@@ -46,8 +46,9 @@
     if (!context) return;
     // Group navigation owns the shared sidebar while active. Background
     // direct-message refreshes must not replace group rows with contacts.
-    if (context.state.currentSection === "groups") return;
+    if (context.state.currentSection && context.state.currentSection !== "chats") return;
     const list = context.elements.conversationList;
+    context.elements.conversationListState?.classList.add("hidden");
 
     if (!context.state.conversations.length) {
       list.innerHTML =
@@ -75,7 +76,7 @@
   async function handleConversationClick(event) {
     const button = event.target.closest(".conversation-item");
     if (!button || !context) return;
-    if (context.state.currentSection === "groups") return;
+    if (context.state.currentSection && context.state.currentSection !== "chats") return;
 
     const conversation = context.state.conversations.find(
       (item) => item.id === button.dataset.conversationId

@@ -696,7 +696,7 @@
             if (button.dataset.section === "status") openStatusModule(elements, state);
             if (button.dataset.section === "groups") openGroupsCenter(elements, state);
             if (button.dataset.section === "calls") openCallsModule(elements, state);
-            if (button.dataset.section === "chats") { state.currentSection = "chats"; hideElement(elements.callsModulePanel);hideElement(elements.statusModulePanel);elements.groupChatPanel.classList.add("hidden");showElement(elements.chatEmptyState);requestConversationRender(elements, state); }
+            if (button.dataset.section === "chats") { state.currentSection = "chats";elements.messengerApp.classList.remove("module-wide");hideElement(elements.callsModulePanel);hideElement(elements.statusModulePanel);elements.groupChatPanel.classList.add("hidden");showElement(elements.chatEmptyState);requestConversationRender(elements, state); }
           }
         );
       }
@@ -1732,14 +1732,14 @@
   }
 
   function hideWorkspaceModules(elements){hideElement(elements.chatEmptyState);hideElement(elements.activeChatPanel);hideElement(elements.groupChatPanel);hideElement(elements.callsModulePanel);hideElement(elements.statusModulePanel);hideElement(elements.detailsPanel);}
-  async function openCallsModule(elements,state){state.currentSection="calls";hideWorkspaceModules(elements);showElement(elements.callsModulePanel);elements.conversationList.innerHTML="";renderEmptyConversationState(elements,"Right side se contact ko call karein.");try{const response=await window.IDEAZ_API.users();state.callUsers=response.data.users||[];renderCallContacts(elements,state);}catch(error){elements.callContactsList.innerHTML=`<div class="modal-empty-state">${error.message}</div>`;}}
+  async function openCallsModule(elements,state){state.currentSection="calls";elements.messengerApp.classList.add("module-wide");hideWorkspaceModules(elements);showElement(elements.callsModulePanel);elements.conversationList.innerHTML="";hideElement(elements.conversationListState);try{const response=await window.IDEAZ_API.users();state.callUsers=response.data.users||[];renderCallContacts(elements,state);}catch(error){elements.callContactsList.innerHTML=`<div class="modal-empty-state">${error.message}</div>`;}}
   function renderCallContacts(elements,state){const query=(elements.callContactSearch.value||"").trim().toLowerCase();elements.callContactsList.innerHTML="";(state.callUsers||[]).filter(user=>(user.fullName+" "+user.username).toLowerCase().includes(query)).forEach(user=>{const row=document.createElement("article");row.className="call-contact-card";const avatar=document.createElement("img");avatar.src=user.avatar||"/assets/default-avatar.svg";avatar.alt="";const info=document.createElement("div");const name=document.createElement("strong");name.textContent=user.fullName;const status=document.createElement("small");status.textContent=user.online?"Online":`@${user.username}`;info.append(name,status);const voice=document.createElement("button");voice.type="button";voice.title="Voice call";voice.textContent="📞";voice.onclick=()=>startModuleCall(elements,state,user,"voice");const video=document.createElement("button");video.type="button";video.title="Video call";video.textContent="🎥";video.onclick=()=>startModuleCall(elements,state,user,"video");row.append(avatar,info,video,voice);elements.callContactsList.appendChild(row);});}
   function startModuleCall(elements,state,user,type){state.selectedUser=user;window.IDEAZ_CALLS?.startCall(type);}
-  async function openStatusModule(elements,state){state.currentSection="status";hideWorkspaceModules(elements);showElement(elements.statusModulePanel);elements.conversationList.innerHTML="";renderEmptyConversationState(elements,"Right side par status updates hain.");elements.myStatusAvatar.src=state.currentUser.avatar||"/assets/default-avatar.svg";elements.statusOverviewList.innerHTML='<div class="modal-empty-state">Updates load ho rahi hain...</div>';try{const response=await window.IDEAZ_API.statuses();state.statuses=response.data.statuses||[];renderStatusOverview(elements,state);}catch(error){elements.statusOverviewList.innerHTML=`<div class="modal-empty-state">${error.message}</div>`;}}
+  async function openStatusModule(elements,state){state.currentSection="status";elements.messengerApp.classList.add("module-wide");hideWorkspaceModules(elements);showElement(elements.statusModulePanel);elements.conversationList.innerHTML="";hideElement(elements.conversationListState);elements.myStatusAvatar.src=state.currentUser.avatar||"/assets/default-avatar.svg";elements.statusOverviewList.innerHTML='<div class="modal-empty-state">Updates load ho rahi hain...</div>';try{const response=await window.IDEAZ_API.statuses();state.statuses=response.data.statuses||[];renderStatusOverview(elements,state);}catch(error){elements.statusOverviewList.innerHTML=`<div class="modal-empty-state">${error.message}</div>`;}}
   function renderStatusOverview(elements,state){elements.statusOverviewList.innerHTML="";const statuses=(state.statuses||[]).filter(s=>s.author.id!==state.currentUser.id);statuses.forEach(status=>{const button=document.createElement("button");button.type="button";button.className=`status-overview-card${status.viewed?" viewed":""}`;const avatar=document.createElement("img");avatar.src=status.author.avatar||"/assets/default-avatar.svg";avatar.alt="";const info=document.createElement("span");const name=document.createElement("strong");name.textContent=status.author.fullName;const time=document.createElement("small");time.textContent=new Date(status.createdAt).toLocaleString();info.append(name,time);button.append(avatar,info);button.onclick=()=>viewStatus(elements,state,status);elements.statusOverviewList.appendChild(button);});if(!statuses.length)elements.statusOverviewList.innerHTML='<div class="module-empty"><span>◉</span><strong>No recent updates</strong><small>Contacts ke status yahan nazar aayenge.</small></div>';}
 
   async function openGroupsCenter(elements,state){
-    state.currentSection="groups"; hideWorkspaceModules(elements); showElement(elements.chatEmptyState);
+    state.currentSection="groups";elements.messengerApp.classList.remove("module-wide");hideWorkspaceModules(elements); showElement(elements.chatEmptyState);
     try{
       const groupsResponse=await window.IDEAZ_API.groups(); state.groups=groupsResponse.data.groups||[];
       renderGroups(elements,state);
@@ -2698,6 +2698,7 @@
     conversation,
     user
   ) {
+    elements.messengerApp.classList.remove("module-wide");
     hideElement(elements.callsModulePanel);
     hideElement(elements.statusModulePanel);
     hideElement(elements.groupChatPanel);
