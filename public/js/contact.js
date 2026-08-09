@@ -106,8 +106,9 @@
     try {
       const response = await window.IDEAZ_API.messages(userId, { limit: 100 });
       const messages = response.data?.messages || [];
-      context.state.messages = messages;
-      renderMessages(messages);
+      const clearedAt = localStorage.getItem(`ideaz-cleared-${context.state.currentUser?.id || "me"}-${userId}`);
+      context.state.messages = clearedAt ? messages.filter((message) => new Date(message.createdAt) > new Date(clearedAt)) : messages;
+      renderMessages(context.state.messages);
       context.elements.loadOlderMessagesWrapper?.classList.toggle("hidden", messages.length < 100);
       window.IDEAZ_API.markSeen(userId).catch(() => {});
     } catch (error) {

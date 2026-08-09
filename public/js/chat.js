@@ -627,6 +627,12 @@
         document.getElementById(
           "detailsSearchButton"
         ),
+      viewSharedMediaButton: document.getElementById("viewSharedMediaButton"),
+      muteConversationButton: document.getElementById("muteConversationButton"),
+      muteConversationState: document.getElementById("muteConversationState"),
+      archiveConversationButton: document.getElementById("archiveConversationButton"),
+      clearConversationButton: document.getElementById("clearConversationButton"),
+      blockUserButton: document.getElementById("blockUserButton"),
 
       messageContextMenu:
         document.getElementById(
@@ -1115,6 +1121,33 @@
         }
       );
     }
+
+    elements.viewSharedMediaButton?.addEventListener("click", function () { showSharedMedia(elements, state); });
+    elements.muteConversationButton?.addEventListener("click", function () {
+      const key = conversationSettingKey("muted", state), enabled = localStorage.getItem(key) !== "1";
+      localStorage.setItem(key, enabled ? "1" : "0"); updateConversationOptionStates(elements, state);
+      showToast(elements, enabled ? "Notifications mute ho gayi hain." : "Notifications unmute ho gayi hain.", "success");
+    });
+    elements.archiveConversationButton?.addEventListener("click", function () {
+      if (!state.selectedUser) return;
+      localStorage.setItem(conversationSettingKey("archived", state), "1");
+      elements.conversationList.querySelector(`[data-user-id="${CSS.escape(state.selectedUser.id)}"]`)?.remove();
+      toggleDetailsPanel(elements, state, false); closeMobileChat();
+      showToast(elements, "Chat archive ho gayi. New message par wapas aa jayegi.", "success");
+    });
+    elements.clearConversationButton?.addEventListener("click", function () {
+      if (!state.selectedUser || !window.confirm("Is device par conversation history clear karein?")) return;
+      localStorage.setItem(conversationSettingKey("cleared", state), new Date().toISOString());
+      state.messages = []; window.IDEAZ_CONTACTS?.renderMessages([]);
+      showToast(elements, "Conversation clear ho gayi.", "success");
+    });
+    elements.blockUserButton?.addEventListener("click", function () {
+      if (!state.selectedUser) return;
+      const key = conversationSettingKey("blocked", state), blocked = localStorage.getItem(key) !== "1";
+      if (blocked && !window.confirm(`${state.selectedUser.fullName || state.selectedUser.username} ko block karein?`)) return;
+      localStorage.setItem(key, blocked ? "1" : "0"); updateConversationOptionStates(elements, state);
+      showToast(elements, blocked ? "User block ho gaya." : "User unblock ho gaya.", "success");
+    });
 
     if (
       elements.closeMessageSearch
@@ -2138,6 +2171,7 @@
         elements,
         state.selectedUser
       );
+      updateConversationOptionStates(elements, state);
     }
   }
 
@@ -2187,6 +2221,33 @@
               user.lastSeen
             );
     }
+  }
+
+  function conversationSettingKey(type, state) {
+    return `ideaz-${type}-${state.currentUser?.id || "me"}-${state.selectedUser?.id || "chat"}`;
+  }
+
+  function updateConversationOptionStates(elements, state) {
+    const muted = localStorage.getItem(conversationSettingKey("muted", state)) === "1";
+    const blocked = localStorage.getItem(conversationSettingKey("blocked", state)) === "1";
+    if (elements.muteConversationState) elements.muteConversationState.textContent = muted ? "On" : "Off";
+    if (elements.blockUserButton) elements.blockUserButton.textContent = blocked ? "Unblock User" : "Block User";
+    if (elements.messageInput) { elements.messageInput.disabled = blocked; elements.messageInput.placeholder = blocked ? "User blocked" : "Type a message"; }
+    if (elements.sendMessageButton) elements.sendMessageButton.disabled = blocked;
+  }
+
+  function showSharedMedia(elements, state) {
+    const media = state.messages.filter((message) => message.file);
+    const overlay = document.createElement("div"); overlay.className = "modal-backdrop";
+    const cards = media.length ? media.map((message) => {
+      const url = escapeHtml(message.file), type = String(message.fileType || "");
+      if (type.startsWith("image/")) return `<a href="${url}" target="_blank" rel="noopener"><img class="shared-media-thumb" src="${url}" alt="Shared image"></a>`;
+      if (type.startsWith("video/")) return `<video class="shared-media-thumb" src="${url}" controls></video>`;
+      return `<a class="chat-file" href="${url}" target="_blank" rel="noopener">Download file</a>`;
+    }).join("") : '<div class="modal-empty-state">Abhi koi shared media nahi hai.</div>';
+    overlay.innerHTML = `<section class="modal-card shared-media-modal"><header class="modal-header"><div><p class="modal-eyebrow">Conversation</p><h2>Shared Media</h2></div><button class="icon-button" type="button" aria-label="Close">×</button></header><div class="shared-media-grid">${cards}</div></section>`;
+    overlay.addEventListener("click", (event) => { if (event.target === overlay || event.target.closest('[aria-label="Close"]')) overlay.remove(); });
+    document.body.appendChild(overlay);
   }
 
   function toggleMessageSearch(
