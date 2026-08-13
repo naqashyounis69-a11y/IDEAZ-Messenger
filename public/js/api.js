@@ -63,7 +63,32 @@
     sendGroupMessage: (id, data) => request(`/groups/${id}/messages`, { method: "POST", body: JSON.stringify(data) }),
     updateGroup: (id, data) => request(`/groups/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     deleteGroup: (id) => request(`/groups/${id}`, { method: "DELETE" }),
-    upload: (file) => {
+    upload: async (file) => {
+      if (file.size > 4 * 1024 * 1024) {
+        const token = await window.IDEAZ_STORAGE.getToken();
+        const chunkSize = 1024 * 1024;
+        const total = Math.ceil(file.size / chunkSize);
+        const uploadId = crypto.randomUUID();
+        let result;
+        for (let index = 0; index < total; index += 1) {
+          const response = await fetch("/api/uploads/chunk", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/octet-stream",
+              "X-Upload-Id": uploadId,
+              "X-Chunk-Index": String(index),
+              "X-Chunk-Total": String(total),
+              "X-File-Name": encodeURIComponent(file.name),
+              "X-File-Type": encodeURIComponent(file.type || "application/octet-stream"),
+            },
+            body: file.slice(index * chunkSize, Math.min(file.size, (index + 1) * chunkSize)),
+          });
+          result = await response.json();
+          if (!response.ok) throw new Error(result.message || "File chunk upload nahi ho saka.");
+        }
+        return result;
+      }
       const form = new FormData();
       form.append("file", file);
       return request("/uploads", { method: "POST", body: form });

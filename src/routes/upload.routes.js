@@ -7,7 +7,9 @@ const { protect } = require("../middleware/auth.middleware");
 
 const router = express.Router();
 const uploadDirectory = path.join(__dirname, "..", "..", "uploads", "messages");
+const chunkDirectory = path.join(__dirname, "..", "..", "uploads", "chunks");
 fs.mkdirSync(uploadDirectory, { recursive: true });
+fs.mkdirSync(chunkDirectory, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: (_req, _file, callback) => callback(null, uploadDirectory),
@@ -48,6 +50,42 @@ const upload = multer({
     }
     callback(null, true);
   },
+});
+
+router.post("/chunk", protect, express.raw({ type: "application/octet-stream", limit: "2mb" }), (req, res, next) => {
+  try {
+    const uploadId = String(req.headers["x-upload-id"] || "").replace(/[^a-zA-Z0-9-]/g, "");
+    const index = Number(req.headers["x-chunk-index"]);
+    const total = Number(req.headers["x-chunk-total"]);
+    const originalName = decodeURIComponent(String(req.headers["x-file-name"] || "file.bin"));
+    const fileType = decodeURIComponent(String(req.headers["x-file-type"] || "application/octet-stream"));
+    if (!uploadId || !Number.isInteger(index) || !Number.isInteger(total) || index < 0 || index >= total || total > 1024) {
+      return res.status(400).json({ success: false, message: "Upload chunk details invalid hain." });
+    }
+    const userUpload = path.join(chunkDirectory, `${req.user.id}-${uploadId}`);
+    fs.mkdirSync(userUpload, { recursive: true });
+    fs.writeFileSync(path.join(userUpload, `${index}.part`), req.body);
+    const received = fs.readdirSync(userUpload).filter((name) => name.endsWith(".part")).length;
+    if (received < total) return res.json({ success: true, data: { complete: false, received, total } });
+
+    const extension = path.extname(originalName).slice(0, 12).toLowerCase();
+    const finalName = `${Date.now()}-${crypto.randomUUID()}${extension}`;
+    const finalPath = path.join(uploadDirectory, finalName);
+    let fileSize = 0;
+    const output = fs.openSync(finalPath, "w");
+    try {
+      for (let part = 0; part < total; part += 1) {
+        const bytes = fs.readFileSync(path.join(userUpload, `${part}.part`));
+        fileSize += bytes.length;
+        if (fileSize > maximumUploadSize) throw new Error("File maximum upload size se bari hai.");
+        fs.writeSync(output, bytes);
+      }
+    } finally { fs.closeSync(output); }
+    fs.rmSync(userUpload, { recursive: true, force: true });
+    return res.status(201).json({ success: true, message: "File upload ho gayi.", data: {
+      complete: true, file: `/uploads/messages/${finalName}`, fileType, fileName: originalName, fileSize,
+    } });
+  } catch (error) { return next(error); }
 });
 
 router.post("/", protect, upload.single("file"), (req, res) => {
