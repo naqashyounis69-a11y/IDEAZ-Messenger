@@ -47,6 +47,37 @@
       if (context.state.selectedUser?.id !== userId) return;
       context.elements.typingIndicator.classList.add("hidden");
     });
+
+    socket.on("users:online", (userIds = []) => {
+      const onlineIds = new Set(userIds);
+      updateAllPresence((user) => ({ ...user, online: onlineIds.has(user.id) }));
+    });
+
+    socket.on("user:online", (payload = {}) => updatePresence(payload.userId, true, payload.lastSeen));
+    socket.on("user:offline", (payload = {}) => updatePresence(payload.userId, false, payload.lastSeen));
+  }
+
+  function updateAllPresence(transform) {
+    context.state.users = (context.state.users || []).map(transform);
+    context.state.conversations = (context.state.conversations || []).map((conversation) => {
+      const key = conversation.otherUser ? "otherUser" : "user";
+      return conversation[key] ? { ...conversation, [key]: transform(conversation[key]) } : conversation;
+    });
+    if (context.state.selectedUser) context.state.selectedUser = transform(context.state.selectedUser);
+    refreshPresenceUi();
+  }
+
+  function updatePresence(userId, online, lastSeen) {
+    if (!userId) return;
+    updateAllPresence((user) => user.id === userId ? { ...user, online, lastSeen: lastSeen || user.lastSeen } : user);
+  }
+
+  function refreshPresenceUi() {
+    window.IDEAZ_CONTACTS?.renderConversations();
+    if (context.state.selectedUser) {
+      window.IDEAZ_CHAT?.renderActiveChatHeader(context.elements, context.state.selectedUser);
+      if (context.state.detailsPanelOpen) window.IDEAZ_CHAT?.renderDetailsPanel(context.elements, context.state.selectedUser);
+    }
   }
 
   window.IDEAZ_CHAT_SOCKET = { initialize };

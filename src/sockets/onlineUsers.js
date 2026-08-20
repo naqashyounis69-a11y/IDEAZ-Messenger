@@ -1,7 +1,10 @@
 const socketService = require("../services/socket.service");
+const prisma = require("../config/prisma");
 
-function registerOnlineUser(io, socket, userId) {
+async function registerOnlineUser(io, socket, userId) {
     if (!userId) return;
+
+    if (socket.userId && socket.userId !== userId) return;
 
     socket.userId = userId;
 
@@ -9,25 +12,40 @@ function registerOnlineUser(io, socket, userId) {
 
     socketService.addUser(userId, socket.id);
 
+    const user = await prisma.user.update({
+        where: { id: userId },
+        data: { online: true },
+        select: { id: true, online: true, lastSeen: true }
+    }).catch(() => null);
+
     io.emit("users:online", socketService.getOnlineUsers());
 
-    socket.broadcast.emit("user:online", {
-        userId
+    io.emit("user:online", {
+        userId,
+        online: true,
+        lastSeen: user?.lastSeen || null
     });
 
     console.log(`🟢 User Online: ${userId}`);
 }
 
-function unregisterOnlineUser(io, socket) {
-    const userId = socketService.removeUser(socket.id);
+async function unregisterOnlineUser(io, socket) {
+    const removed = socketService.removeUser(socket.id);
 
-    if (!userId) return;
+    if (!removed || !removed.isLastConnection) return;
+    const { userId } = removed;
+    const lastSeen = new Date();
+    await prisma.user.update({
+        where: { id: userId },
+        data: { online: false, lastSeen }
+    }).catch(() => null);
 
     io.emit("users:online", socketService.getOnlineUsers());
 
-    socket.broadcast.emit("user:offline", {
+    io.emit("user:offline", {
         userId,
-        lastSeen: new Date().toISOString()
+        online: false,
+        lastSeen: lastSeen.toISOString()
     });
 
     console.log(`🔴 User Offline: ${userId}`);

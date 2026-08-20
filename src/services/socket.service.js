@@ -1,21 +1,25 @@
 const onlineUsers = new Map();
 
 function addUser(userId, socketId) {
-    onlineUsers.set(userId, socketId);
+    const sockets = onlineUsers.get(userId) || new Set();
+    sockets.add(socketId);
+    onlineUsers.set(userId, sockets);
 }
 
 function removeUser(socketId) {
-    for (const [userId, id] of onlineUsers.entries()) {
-        if (id === socketId) {
-            onlineUsers.delete(userId);
-            return userId;
+    for (const [userId, sockets] of onlineUsers.entries()) {
+        if (sockets.has(socketId)) {
+            sockets.delete(socketId);
+            const isLastConnection = sockets.size === 0;
+            if (isLastConnection) onlineUsers.delete(userId);
+            return { userId, isLastConnection };
         }
     }
     return null;
 }
 
 function getSocketId(userId) {
-    return onlineUsers.get(userId);
+    return onlineUsers.get(userId)?.values().next().value;
 }
 
 function isOnline(userId) {

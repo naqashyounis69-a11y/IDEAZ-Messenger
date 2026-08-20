@@ -23,9 +23,9 @@ function initializeSocket(io) {
         ==========================================
         */
 
-        socket.on("user:login", (userId) => {
+        socket.on("user:login", async (userId) => {
 
-            registerOnlineUser(
+            await registerOnlineUser(
                 io,
                 socket,
                 userId
@@ -33,9 +33,9 @@ function initializeSocket(io) {
 
         });
 
-        socket.on("join-user", (userId) => {
+        socket.on("join-user", async (userId) => {
 
-            registerOnlineUser(
+            await registerOnlineUser(
                 io,
                 socket,
                 userId
@@ -65,9 +65,9 @@ function initializeSocket(io) {
         ==========================================
         */
 
-        socket.on("disconnect", () => {
+        socket.on("disconnect", async () => {
 
-            unregisterOnlineUser(
+            await unregisterOnlineUser(
                 io,
                 socket
             );

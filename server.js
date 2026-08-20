@@ -66,6 +66,14 @@ async function startServer() {
   try {
     await prisma.$connect();
 
+    // A previous crash/restart can leave stale online flags in PostgreSQL.
+    // Socket connections below are the source of truth and will mark active
+    // users online again as soon as their clients reconnect.
+    await prisma.user.updateMany({
+      where: { online: true },
+      data: { online: false, lastSeen: new Date() },
+    });
+
     console.log(
       "PostgreSQL database connected successfully."
     );
