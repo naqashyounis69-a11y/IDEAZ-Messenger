@@ -70,6 +70,7 @@
     showOverlay(`${type === "video" ? "Video" : "Voice"} call ja rahi hai...`, false);
     startRinging(false);
     try {
+      if (!socket) throw new Error("Realtime connection ready nahi hai. App Reload karein.");
       await rtcConfigPromise;
       await prepareMedia(type);
       createPeer();
@@ -79,7 +80,8 @@
       await peer.setLocalDescription(offer);
       socket.emit("call:offer", { targetUserId: activeUser.id, offer, type, caller: context.state.currentUser });
     } catch (error) {
-      closeCall(error.name === "NotAllowedError" ? "Camera/microphone permission allow karein." : "Call start nahi ho saki.");
+      console.error("Call start error:", error);
+      closeCall(mediaErrorMessage(error));
     }
   }
 
@@ -122,7 +124,8 @@
       byId("callStatusText").textContent = "Media connect ho raha hai...";
     } catch (error) {
       rejectCall();
-      notify("Camera/microphone permission allow karein.", "warning");
+      console.error("Call accept error:", error);
+      notify(mediaErrorMessage(error), "warning");
     }
   }
 
@@ -268,15 +271,21 @@
   }
 
   async function prepareMedia(type) {
-    const audioStream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-        channelCount: 1,
-      },
-      video: false,
-    });
+    if (!navigator.mediaDevices?.getUserMedia) throw new Error("Is computer mein microphone API available nahi hai.");
+    let audioStream;
+    try {
+      audioStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: { ideal: true },
+          noiseSuppression: { ideal: true },
+          autoGainControl: { ideal: true },
+        },
+        video: false,
+      });
+    } catch (error) {
+      if (!["OverconstrainedError", "TypeError"].includes(error.name)) throw error;
+      audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    }
     localStream = new MediaStream(audioStream.getAudioTracks());
 
     // A denied/busy camera must not stop the call from reaching the other
@@ -302,6 +311,15 @@
     localVideo.srcObject = localStream;
     localVideo.classList.toggle("hidden", localStream.getVideoTracks().length === 0);
     byId("remoteVideo").classList.toggle("hidden", type !== "video");
+  }
+
+  function mediaErrorMessage(error) {
+    const name = error?.name || "Error";
+    if (name === "NotAllowedError" || name === "SecurityError") return "Microphone block hai. Windows aur app permission Allow karein.";
+    if (name === "NotFoundError" || name === "DevicesNotFoundError") return "Microphone nahi mila. Mic connect karke app dobara kholein.";
+    if (name === "NotReadableError" || name === "TrackStartError") return "Microphone kisi aur app mein busy hai. Doosri call/recording app band karein.";
+    if (name === "OverconstrainedError") return "Microphone is computer ke required mode ko support nahi karta.";
+    return error?.message ? `Call error: ${error.message}` : `Call start nahi ho saki (${name}).`;
   }
 
   function showOverlay(status, incoming) {
