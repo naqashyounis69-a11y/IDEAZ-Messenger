@@ -1044,6 +1044,11 @@
           <span><strong>Can anyone call me?</strong><small>Off karne par audio aur video call requests receive nahi hongi.</small></span>
           <input id="allowCallsToggle" type="checkbox" checked>
         </label>
+        <div class="profile-privacy-toggle">
+          <span><strong>Messages & calls while app is closed</strong><small>Phone par app install karke background alerts enable karein.</small></span>
+          <span id="backgroundNotificationsState">Off</span>
+        </div>
+        <button id="backgroundNotificationsButton" class="secondary-button" type="button">Enable background alerts</button>
         <div class="profile-form-actions">
           <button id="cancelSettingsButton" type="button" class="secondary-button">Cancel</button>
           <button id="saveSettingsButton" type="submit" class="primary-button">Save Settings</button>
@@ -1163,18 +1168,18 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/config.js"></script>
   <script src="/js/storage.js"></script>
-  <script src="/js/api.js?v=14"></script>
+  <script src="/js/api.js?v=15"></script>
   <script src="/js/socket.js?v=6"></script>
   <script src="/js/chat.socket.js?v=8"></script>
   <script src="/js/typing.js"></script>
-  <script src="/js/notifications.js"></script>
+  <script src="/js/notifications.js?v=2"></script>
   <script src="/js/contact.js?v=13"></script>
   <script src="/js/conversation.js?v=6"></script>
   <script src="/js/messages.js"></script>
   <script src="/js/uploads.js?v=8"></script>
-  <script src="/js/calls.js?v=10"></script>
+  <script src="/js/calls.js?v=11"></script>
   <script src="/js/ui.js"></script>
   <script src="/js/chat.js?v=24"></script>
-  <script src="/js/pwa.js?v=2"></script>
+  <script src="/js/pwa.js?v=3"></script>
 </body>
 </html>

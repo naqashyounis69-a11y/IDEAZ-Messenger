@@ -63,6 +63,9 @@
     sendGroupMessage: (id, data) => request(`/groups/${id}/messages`, { method: "POST", body: JSON.stringify(data) }),
     updateGroup: (id, data) => request(`/groups/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     deleteGroup: (id) => request(`/groups/${id}`, { method: "DELETE" }),
+    pushPublicKey: () => request("/push/public-key"),
+    pushSubscribe: (subscription) => request("/push/subscribe", { method: "POST", body: JSON.stringify({ subscription }) }),
+    pushUnsubscribe: (endpoint) => request("/push/subscribe", { method: "DELETE", body: JSON.stringify({ endpoint }) }),
     upload: async (file) => {
       if (file.size > 4 * 1024 * 1024) {
         const token = await window.IDEAZ_STORAGE.getToken();

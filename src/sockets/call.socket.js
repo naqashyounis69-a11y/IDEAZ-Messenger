@@ -1,4 +1,6 @@
 const prisma = require("../config/prisma");
+const pushService = require("../services/push.service");
+const pendingCalls = new Map();
 
 function registerCallSocket(io, socket) {
   function forward(eventName, payload = {}) {
@@ -28,7 +30,14 @@ function registerCallSocket(io, socket) {
         });
         return;
       }
-      forward("call:offer", payload);
+      const offerPayload = { ...payload, targetUserId: undefined, fromUserId: socket.userId };
+      pendingCalls.set(targetUserId, { payload: offerPayload, expiresAt: Date.now() + 45000 });
+      io.to(`user:${targetUserId}`).emit("call:offer", offerPayload);
+      pushService.sendToUser(targetUserId, {
+        type: "call", title: `${payload.caller?.fullName || "Someone"} calling`,
+        body: payload.type === "video" ? "Incoming video call" : "Incoming voice call",
+        url: "/chat?incomingCall=1", tag: `call-${socket.userId}`, requireInteraction: true
+      }).catch(() => {});
     } catch (_error) {
       socket.emit("call:unavailable", {
         targetUserId,
@@ -36,10 +45,16 @@ function registerCallSocket(io, socket) {
       });
     }
   });
-  socket.on("call:answer", (payload) => forward("call:answer", payload));
+  socket.on("call:ready", () => {
+    const pending = pendingCalls.get(socket.userId);
+    if (!pending) return;
+    if (pending.expiresAt < Date.now()) return pendingCalls.delete(socket.userId);
+    socket.emit("call:offer", pending.payload);
+  });
+  socket.on("call:answer", (payload) => { pendingCalls.delete(socket.userId); forward("call:answer", payload); });
   socket.on("call:ice-candidate", (payload) => forward("call:ice-candidate", payload));
-  socket.on("call:reject", (payload) => forward("call:reject", payload));
-  socket.on("call:end", (payload) => forward("call:end", payload));
+  socket.on("call:reject", (payload) => { pendingCalls.delete(socket.userId); forward("call:reject", payload); });
+  socket.on("call:end", (payload) => { pendingCalls.delete(payload?.targetUserId); forward("call:end", payload); });
 }
 
 module.exports = { registerCallSocket };

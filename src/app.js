@@ -13,6 +13,7 @@ const uploadRoutes = require("./routes/upload.routes");
 const remoteRoutes = require("./routes/remote.routes");
 const statusRoutes = require("./routes/status.routes");
 const groupRoutes = require("./routes/group.routes");
+const pushRoutes = require("./routes/push.routes");
 
 const {
   notFound,
@@ -268,6 +269,7 @@ app.use(
 
 app.use("/api/statuses", statusRoutes);
 app.use("/api/groups", groupRoutes);
+app.use("/api/push", pushRoutes);
 
 /*
 |--------------------------------------------------------------------------

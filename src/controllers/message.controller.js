@@ -1,6 +1,7 @@
 const messageService = require(
   "../services/message.service"
 );
+const pushService = require("../services/push.service");
 
 function sendSuccess(
   res,
@@ -88,6 +89,11 @@ async function sendMessage(
           message.sender || null,
       }
     );
+    pushService.sendToUser(message.receiverId, {
+      type: "message", title: message.sender?.fullName || "New message",
+      body: message.text || "Aapko file bheji gayi hai.", url: "/chat",
+      tag: `message-${message.senderId}`
+    }).catch(() => {});
 
     return sendSuccess(
       res,

@@ -219,6 +219,8 @@
       cancelSettingsButton: document.getElementById("cancelSettingsButton"),
       settingsForm: document.getElementById("settingsForm"),
       allowCallsToggle: document.getElementById("allowCallsToggle"),
+      backgroundNotificationsButton: document.getElementById("backgroundNotificationsButton"),
+      backgroundNotificationsState: document.getElementById("backgroundNotificationsState"),
       saveSettingsButton: document.getElementById("saveSettingsButton"),
 
       logoutButton:
@@ -1592,6 +1594,7 @@
         state,
       });
     }
+    window.IDEAZ_NOTIFICATIONS?.initialize?.({ elements, state });
   }
 
   function renderCurrentUser(
