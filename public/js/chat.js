@@ -2459,6 +2459,7 @@
               text: index === 0 ? text : "",
               attachment: attachments[index],
               replyTo: index === 0 ? state.replyingToMessage : null,
+              onUploadProgress: (progress) => updateAttachmentUploadProgress(elements, progress, index, attachments.length),
             });
           }
         } else {
@@ -2618,6 +2619,11 @@
     info.appendChild(name);
     info.appendChild(size);
 
+    const progress = document.createElement("div");
+    progress.className = "attachment-upload-progress hidden";
+    progress.innerHTML = '<div class="attachment-upload-track"><span></span></div><small>Upload 0%</small>';
+    info.appendChild(progress);
+
     if (files.length > 1) {
       const count = document.createElement("small");
       count.textContent = `${files.length} files selected`;
@@ -2634,12 +2640,27 @@
     );
   }
 
+  function updateAttachmentUploadProgress(elements, progress, fileIndex = 0, fileCount = 1) {
+    const container = elements.attachmentPreviewContent?.querySelector(".attachment-upload-progress");
+    if (!container) return;
+    container.classList.remove("hidden");
+    const percent = Math.max(0, Math.min(100, Number(progress?.percent) || 0));
+    const bar = container.querySelector("span");
+    const label = container.querySelector("small");
+    if (bar) bar.style.width = `${percent}%`;
+    if (label) label.textContent = `${fileCount > 1 ? `File ${fileIndex + 1}/${fileCount} · ` : ""}Upload ${percent}%`;
+    elements.sendMessageButton.title = `Uploading ${percent}%`;
+    elements.sendMessageButton.setAttribute("aria-label", `Uploading ${percent}%`);
+  }
+
   function clearAttachment(
     elements,
     state
   ) {
     state.selectedAttachment = null;
     state.selectedAttachments = [];
+    elements.sendMessageButton.title = "Send";
+    elements.sendMessageButton.setAttribute("aria-label", "Send message");
 
     [elements.fileInput, elements.imageInput, elements.folderInput].filter(Boolean).forEach((input) => { input.value = ""; });
 

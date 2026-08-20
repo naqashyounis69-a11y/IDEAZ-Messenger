@@ -57,7 +57,7 @@ router.post("/chunk", protect, express.raw({ type: "application/octet-stream", l
     const uploadId = String(req.headers["x-upload-id"] || "").replace(/[^a-zA-Z0-9-]/g, "");
     const index = Number(req.headers["x-chunk-index"]);
     const total = Number(req.headers["x-chunk-total"]);
-    const originalName = decodeURIComponent(String(req.headers["x-file-name"] || "file.bin"));
+    const originalName = path.basename(decodeURIComponent(String(req.headers["x-file-name"] || "file.bin")));
     const fileType = decodeURIComponent(String(req.headers["x-file-type"] || "application/octet-stream"));
     if (!uploadId || !Number.isInteger(index) || !Number.isInteger(total) || index < 0 || index >= total || total > 1024) {
       return res.status(400).json({ success: false, message: "Upload chunk details invalid hain." });
@@ -65,7 +65,7 @@ router.post("/chunk", protect, express.raw({ type: "application/octet-stream", l
     const userUpload = path.join(chunkDirectory, `${req.user.id}-${uploadId}`);
     fs.mkdirSync(userUpload, { recursive: true });
     fs.writeFileSync(path.join(userUpload, `${index}.part`), req.body);
-    const received = fs.readdirSync(userUpload).filter((name) => name.endsWith(".part")).length;
+    const received = fs.readdirSync(userUpload).filter((name) => /^\d+\.part$/.test(name)).length;
     if (received < total) return res.json({ success: true, data: { complete: false, received, total } });
 
     const extension = path.extname(originalName).slice(0, 12).toLowerCase();
@@ -80,7 +80,12 @@ router.post("/chunk", protect, express.raw({ type: "application/octet-stream", l
         if (fileSize > maximumUploadSize) throw new Error("File maximum upload size se bari hai.");
         fs.writeSync(output, bytes);
       }
-    } finally { fs.closeSync(output); }
+    } catch (error) {
+      fs.closeSync(output);
+      fs.rmSync(finalPath, { force: true });
+      throw error;
+    }
+    fs.closeSync(output);
     fs.rmSync(userUpload, { recursive: true, force: true });
     return res.status(201).json({ success: true, message: "File upload ho gayi.", data: {
       complete: true, file: `/uploads/messages/${finalName}`, fileType, fileName: originalName, fileSize,

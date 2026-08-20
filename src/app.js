@@ -73,6 +73,11 @@ app.use(
     allowedHeaders: [
       "Content-Type",
       "Authorization",
+      "X-Upload-Id",
+      "X-Chunk-Index",
+      "X-Chunk-Total",
+      "X-File-Name",
+      "X-File-Type",
     ],
   })
 );

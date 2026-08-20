@@ -1194,6 +1194,34 @@ html[data-theme="light"] audio { color-scheme: light; }
   min-width: 0;
 }
 
+.attachment-upload-progress {
+  width: min(360px, 52vw);
+  margin-top: 7px;
+}
+
+.attachment-upload-track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border-color);
+}
+
+.attachment-upload-track span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  transition: width 180ms ease;
+}
+
+.attachment-upload-progress small {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
 .reply-preview-label {
   display: block;
   color: var(--primary-light);

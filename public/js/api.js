@@ -66,35 +66,53 @@
     pushPublicKey: () => request("/push/public-key"),
     pushSubscribe: (subscription) => request("/push/subscribe", { method: "POST", body: JSON.stringify({ subscription }) }),
     pushUnsubscribe: (endpoint) => request("/push/subscribe", { method: "DELETE", body: JSON.stringify({ endpoint }) }),
-    upload: async (file) => {
+    upload: async (file, onProgress) => {
       if (file.size > 4 * 1024 * 1024) {
         const token = await window.IDEAZ_STORAGE.getToken();
         const chunkSize = 1024 * 1024;
         const total = Math.ceil(file.size / chunkSize);
         const uploadId = crypto.randomUUID();
         let result;
+        onProgress?.({ percent: 0, uploaded: 0, total: file.size, file });
         for (let index = 0; index < total; index += 1) {
-          const response = await fetch("/api/uploads/chunk", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/octet-stream",
-              "X-Upload-Id": uploadId,
-              "X-Chunk-Index": String(index),
-              "X-Chunk-Total": String(total),
-              "X-File-Name": encodeURIComponent(file.name),
-              "X-File-Type": encodeURIComponent(file.type || "application/octet-stream"),
-            },
-            body: file.slice(index * chunkSize, Math.min(file.size, (index + 1) * chunkSize)),
-          });
-          result = await response.json();
-          if (!response.ok) throw new Error(result.message || "File chunk upload nahi ho saka.");
+          const body = file.slice(index * chunkSize, Math.min(file.size, (index + 1) * chunkSize));
+          let lastError;
+          for (let attempt = 1; attempt <= 5; attempt += 1) {
+            try {
+              const response = await fetch("/api/uploads/chunk", {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/octet-stream",
+                  "X-Upload-Id": uploadId,
+                  "X-Chunk-Index": String(index),
+                  "X-Chunk-Total": String(total),
+                  "X-File-Name": encodeURIComponent(file.name),
+                  "X-File-Type": encodeURIComponent(file.type || "application/octet-stream"),
+                },
+                body,
+              });
+              result = await response.json().catch(() => ({}));
+              if (!response.ok) throw new Error(result.message || `Upload failed (${response.status}).`);
+              lastError = null;
+              break;
+            } catch (error) {
+              lastError = error;
+              if (attempt < 5) await new Promise((resolve) => setTimeout(resolve, attempt * 800));
+            }
+          }
+          if (lastError) throw new Error(`File upload ruk gaya. Internet check karke dobara Send karein. (${lastError.message})`);
+          const uploaded = Math.min(file.size, (index + 1) * chunkSize);
+          onProgress?.({ percent: Math.round((uploaded / file.size) * 100), uploaded, total: file.size, file });
         }
         return result;
       }
       const form = new FormData();
       form.append("file", file);
-      return request("/uploads", { method: "POST", body: form });
+      onProgress?.({ percent: 10, uploaded: 0, total: file.size, file });
+      const result = await request("/uploads", { method: "POST", body: form });
+      onProgress?.({ percent: 100, uploaded: file.size, total: file.size, file });
+      return result;
     },
   };
 })();
