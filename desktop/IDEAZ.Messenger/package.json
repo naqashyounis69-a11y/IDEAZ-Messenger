@@ -1,0 +1,41 @@
+{
+  "name": "ideaz-messenger-desktop",
+  "version": "1.0.0",
+  "description": "IDEAZ Messenger for Windows",
+  "main": "main.js",
+  "author": "IDEAZ Solutions",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "electron": "^37.2.6",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.ideaz.messenger",
+    "productName": "IDEAZ Messenger",
+    "artifactName": "IDEAZ-Messenger-Setup-${version}.${ext}",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "win": {
+      "target": ["nsis"]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "IDEAZ Messenger",
+      "runAfterFinish": true
+    }
+  }
+}
