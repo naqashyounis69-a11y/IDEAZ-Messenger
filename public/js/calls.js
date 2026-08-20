@@ -91,6 +91,14 @@
     pendingOffer = payload;
     activeUser = payload.caller || { id: payload.fromUserId, fullName: "Incoming caller" };
     activeType = payload.type || "voice";
+    if (document.hidden && Notification.permission === "granted") {
+      new Notification(`${activeUser.fullName || "Someone"} ki ${activeType === "video" ? "video" : "voice"} call`, {
+        body: "IDEAZ Messenger khol kar call receive karein.",
+        icon: activeUser.avatar || "/assets/ideaz-icon.svg",
+        requireInteraction: true,
+        tag: `ideaz-call-${payload.fromUserId}`,
+      });
+    }
     showOverlay(`Incoming ${activeType} call`, true);
     startRinging(true);
   }

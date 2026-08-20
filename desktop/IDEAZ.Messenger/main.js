@@ -2,6 +2,7 @@ const { app, BrowserWindow, Menu, Tray, nativeImage, shell, session } = require(
 const path = require("path");
 
 const APP_URL = "https://ideaz-messenger.bonto.run/chat";
+const startHidden = process.argv.includes("--hidden");
 let mainWindow;
 let tray;
 let quitting = false;
@@ -38,7 +39,7 @@ function createWindow() {
   });
 
   mainWindow.loadURL(APP_URL);
-  mainWindow.once("ready-to-show", () => mainWindow.show());
+  mainWindow.once("ready-to-show", () => { if (!startHidden) mainWindow.show(); });
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("https://ideaz-messenger.bonto.run")) return { action: "allow" };
     shell.openExternal(url);
@@ -75,6 +76,13 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on("second-instance", showWindow);
   app.whenReady().then(() => {
+    if (app.isPackaged) {
+      app.setLoginItemSettings({
+        openAtLogin: true,
+        path: process.execPath,
+        args: ["--hidden"]
+      });
+    }
     session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
       callback(["media", "notifications", "display-capture", "fullscreen"].includes(permission));
     });

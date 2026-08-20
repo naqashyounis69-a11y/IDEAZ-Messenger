@@ -1222,6 +1222,11 @@ html[data-theme="light"] audio { color-scheme: light; }
   font-size: 12px;
 }
 
+.my-status-card.has-status .my-status-avatar-wrap img {
+  padding: 2px;
+  border: 3px solid #22c55e;
+}
+
 .reply-preview-label {
   display: block;
   color: var(--primary-light);

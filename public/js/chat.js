@@ -737,7 +737,10 @@
     elements.callContactSearch?.addEventListener("input", () => renderCallContacts(elements,state));
     elements.newCallButton?.addEventListener("click", () => elements.callContactSearch.focus());
     elements.addStatusButton?.addEventListener("click", () => openStatusCenter(elements,state));
-    elements.myStatusCard?.addEventListener("click", () => openStatusCenter(elements,state));
+    elements.myStatusCard?.addEventListener("click", () => {
+      const ownStatus = (state.statuses || []).find((status) => status.author.id === state.currentUser.id);
+      ownStatus ? viewStatus(elements, state, ownStatus) : openStatusCenter(elements, state);
+    });
     document.addEventListener("click", event => { if(!event.target.closest("#groupContextMenu")) hideElement(elements.groupContextMenu); });
 
     if (
@@ -1796,7 +1799,7 @@
   function renderCallContacts(elements,state){const query=(elements.callContactSearch.value||"").trim().toLowerCase();elements.callContactsList.innerHTML="";(state.callUsers||[]).filter(user=>(user.fullName+" "+user.username).toLowerCase().includes(query)).forEach(user=>{const row=document.createElement("article");row.className="call-contact-card";const avatar=document.createElement("img");avatar.src=user.avatar||"/assets/default-avatar.svg";avatar.alt="";const info=document.createElement("div");const name=document.createElement("strong");name.textContent=user.fullName;const status=document.createElement("small");status.textContent=user.online?"Online":`@${user.username}`;info.append(name,status);const voice=document.createElement("button");voice.type="button";voice.title="Voice call";voice.textContent="📞";voice.onclick=()=>startModuleCall(elements,state,user,"voice");const video=document.createElement("button");video.type="button";video.title="Video call";video.textContent="🎥";video.onclick=()=>startModuleCall(elements,state,user,"video");row.append(avatar,info,video,voice);elements.callContactsList.appendChild(row);});}
   function startModuleCall(elements,state,user,type){state.selectedUser=user;window.IDEAZ_CALLS?.startCall(type);}
   async function openStatusModule(elements,state){state.currentSection="status";elements.messengerApp.classList.add("module-wide");hideWorkspaceModules(elements);showElement(elements.statusModulePanel);elements.conversationList.innerHTML="";hideElement(elements.conversationListState);elements.myStatusAvatar.src=state.currentUser.avatar||"/assets/default-avatar.svg";elements.statusOverviewList.innerHTML='<div class="modal-empty-state">Updates load ho rahi hain...</div>';try{const response=await window.IDEAZ_API.statuses();state.statuses=response.data.statuses||[];renderStatusOverview(elements,state);}catch(error){elements.statusOverviewList.innerHTML=`<div class="modal-empty-state">${error.message}</div>`;}}
-  function renderStatusOverview(elements,state){elements.statusOverviewList.innerHTML="";const statuses=(state.statuses||[]).filter(s=>s.author.id!==state.currentUser.id);statuses.forEach(status=>{const button=document.createElement("button");button.type="button";button.className=`status-overview-card${status.viewed?" viewed":""}`;const avatar=document.createElement("img");avatar.src=status.author.avatar||"/assets/default-avatar.svg";avatar.alt="";const info=document.createElement("span");const name=document.createElement("strong");name.textContent=status.author.fullName;const time=document.createElement("small");time.textContent=new Date(status.createdAt).toLocaleString();info.append(name,time);button.append(avatar,info);button.onclick=()=>viewStatus(elements,state,status);elements.statusOverviewList.appendChild(button);});if(!statuses.length)elements.statusOverviewList.innerHTML='<div class="module-empty"><span>◉</span><strong>No recent updates</strong><small>Contacts ke status yahan nazar aayenge.</small></div>';}
+  function renderStatusOverview(elements,state){elements.statusOverviewList.innerHTML="";const allStatuses=state.statuses||[];const ownStatus=allStatuses.find(s=>s.author.id===state.currentUser.id);const ownText=elements.myStatusCard?.querySelector("small");if(ownText)ownText.textContent=ownStatus?(ownStatus.text||"Photo status")+` · ${new Date(ownStatus.createdAt).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}`:"Click to add a 24-hour update";elements.myStatusCard?.classList.toggle("has-status",Boolean(ownStatus));const statuses=allStatuses.filter(s=>s.author.id!==state.currentUser.id);statuses.forEach(status=>{const button=document.createElement("button");button.type="button";button.className=`status-overview-card${status.viewed?" viewed":""}`;const avatar=document.createElement("img");avatar.src=status.author.avatar||"/assets/default-avatar.svg";avatar.alt="";const info=document.createElement("span");const name=document.createElement("strong");name.textContent=status.author.fullName;const time=document.createElement("small");time.textContent=new Date(status.createdAt).toLocaleString();info.append(name,time);button.append(avatar,info);button.onclick=()=>viewStatus(elements,state,status);elements.statusOverviewList.appendChild(button);});if(!statuses.length)elements.statusOverviewList.innerHTML='<div class="module-empty"><span>◉</span><strong>No contact updates</strong><small>Aapka apna status upar My Status mein available hai.</small></div>';}
 
   async function openGroupsCenter(elements,state){
     state.currentSection="groups";elements.messengerApp.classList.remove("module-wide");hideWorkspaceModules(elements); showElement(elements.chatEmptyState);
@@ -1884,6 +1887,7 @@
       elements.statusImageName.textContent = "";
       showToast(elements, "Status 24 hours ke liye post ho gaya.", "success");
       await openStatusCenter(elements, state);
+      if (state.currentSection === "status") await openStatusModule(elements, state);
     } catch (error) {
       showToast(elements, error.message || "Status post nahi ho saka.", "error");
     } finally {
@@ -1908,6 +1912,7 @@
         await window.IDEAZ_API.deleteStatus(status.id);
         hideElement(elements.statusViewer);
         await openStatusCenter(elements, state);
+        if (state.currentSection === "status") await openStatusModule(elements, state);
       } catch (error) { showToast(elements, error.message, "error"); }
     } : null;
     showElement(elements.statusViewer);
