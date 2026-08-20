@@ -223,20 +223,10 @@ async function loginWithPassword(payload) {
     };
   }
 
-  const updatedUser = await prisma.user.update({
-    where: {
-      id: user.id,
-    },
-    data: {
-      online: true,
-      lastSeen: new Date(),
-    },
-  });
-
-  const accessToken = generateAccessToken(updatedUser);
+  const accessToken = generateAccessToken(user);
 
   return {
-    user: sanitizeUser(updatedUser),
+    user: sanitizeUser(user),
     accessToken,
   };
 }
@@ -277,20 +267,10 @@ async function loginWithPin(payload) {
     };
   }
 
-  const updatedUser = await prisma.user.update({
-    where: {
-      id: user.id,
-    },
-    data: {
-      online: true,
-      lastSeen: new Date(),
-    },
-  });
-
-  const accessToken = generateAccessToken(updatedUser);
+  const accessToken = generateAccessToken(user);
 
   return {
-    user: sanitizeUser(updatedUser),
+    user: sanitizeUser(user),
     accessToken,
   };
 }
@@ -327,16 +307,6 @@ async function logoutUser(userId) {
   }
 
   const lastSeen = new Date();
-
-  await prisma.user.update({
-    where: {
-      id: userId,
-    },
-    data: {
-      online: false,
-      lastSeen,
-    },
-  });
 
   return {
     lastSeen,
